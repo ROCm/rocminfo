@@ -2,6 +2,7 @@
 # Minimum version of cmake required
 #
 cmake_minimum_required(VERSION 3.5.0)
+
 include ( GNUInstallDirs )
 #
 # GCC 4.8 or higher compiler required.
