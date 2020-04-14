@@ -97,6 +97,7 @@ typedef struct {
 // calls, and is later used for reference when displaying the information.
 typedef struct {
   char name[64];
+  char uuid[24];
   char vendor_name[64];
   char device_mkt_name[64];
   hsa_agent_feature_t agent_feature;
@@ -304,6 +305,13 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
   // Get agent name and vendor
   err = hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, agent_i->name);
   RET_IF_HSA_ERR(err);
+
+  // Get UUID, an Ascii string, of a ROCm device
+  err = hsa_agent_get_info(agent,
+                         (hsa_agent_info_t)HSA_AMD_AGENT_INFO_UUID,
+                                                   &agent_i->uuid);
+
+  // Get device's vendor name
   err = hsa_agent_get_info(agent, HSA_AGENT_INFO_VENDOR_NAME,
                                                        &agent_i->vendor_name);
   RET_IF_HSA_ERR(err);
@@ -482,6 +490,7 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
 
 static void DisplayAgentInfo(agent_info_t *agent_i) {
   printLabelStr("Name:", agent_i->name, 1);
+  printLabelStr("Uuid:", agent_i->uuid, 1);
   printLabelStr("Marketing Name:", agent_i->device_mkt_name, 1);
   printLabelStr("Vendor Name:", agent_i->vendor_name, 1);
 
