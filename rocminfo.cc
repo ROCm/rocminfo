@@ -44,7 +44,9 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <unistd.h>
 #include <pwd.h>
@@ -1042,7 +1044,8 @@ void CheckInitialState(void) {
     printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
   }
 
-  // Check if user belongs to group "video"
+  // Check if user belongs to the group for /dev/kfd (e.g. "video" or
+  // "render")
   // @note: User who are not members of "video"
   // group cannot access DRM services
   char u_name[32];
@@ -1051,16 +1054,44 @@ void CheckInitialState(void) {
   int num_groups = 0;
   gid_t *groups;
 
-  struct group *gr_s = getgrnam("video");  // NOLINT
+  // Check if we can open /dev/kfd as read-write. If not, try to
+  // diagnose common reasons why you can't.
+  int open_kfd = open("/dev/kfd", O_RDWR);
+  if (open_kfd >= 0) {
+      close(open_kfd);
+      printf("%sAble to open /dev/kfd read-write%s\n",
+             COL_WHT, COL_RESET);
+      return;
+  }
+
+  printf("%sUnable to open /dev/kfd read-write: %s%s\n",
+         COL_RED, strerror(errno), COL_RESET);
+
+  const char *kfd_gr_name = NULL;
+
+  struct stat sb;
+  if (stat("/dev/kfd", &sb) == 0) {
+      // The owner of kfd was renamed, so avoid hard-coding the
+      // name. Check whatever group owns it.
+      if (struct group *kfd_gr = getgrgid(sb.st_gid))
+          kfd_gr_name = kfd_gr->gr_name;
+  }
+
+  if (!kfd_gr_name)
+      kfd_gr_name = "video";
+
+  struct group *gr_s = getgrnam(kfd_gr_name);  // NOLINT
   if (gr_s == nullptr) {
     printf("%sFailed to get group info to check"
-                       " for video group membership%s\n", COL_RED, COL_RESET);
+           " for %s group membership%s\n", COL_RED, kfd_gr_name,
+           COL_RESET);
     return;
   }
 
   if (getlogin_r(u_name, 32)) {
     printf("%sFailed to get user name to check for"
-                           " video group membership%s\n", COL_RED, COL_RESET);
+           " %s group membership%s\n", COL_RED, kfd_gr_name,
+           COL_RESET);
     return;
   }
 
@@ -1081,16 +1112,16 @@ void CheckInitialState(void) {
 
   for (int i = 0; i < num_groups; ++i) {
     if (gr_s->gr_gid == groups[i]) {
-      printf("%s%s is member of video group%s\n", COL_WHT, u_name, COL_RESET);
+      printf("%s%s is member of %s group%s\n", COL_WHT, u_name, kfd_gr_name, COL_RESET);
       member = true;
       break;
     }
   }
   if (member == false) {
-    printf("%s%s is not member of \"video\" group, the default DRM access "
-     "group. Users must be a member of the \"video\" group or another"
+    printf("%s%s is not member of \"%s\" group, the default DRM access "
+     "group. Users must be a member of the \"%s\" group or another"
         " DRM access group in order for ROCm applications to run "
-                             "successfully%s.\n", COL_RED, u_name, COL_RESET);
+           "successfully%s.\n", COL_RED, u_name, kfd_gr_name, kfd_gr_name, COL_RESET);
   }
 
   delete []groups;
