@@ -733,7 +733,7 @@ static void DisplayPoolInfo(pool_info_t *pool_i, uint32_t indent) {
   std::string al_str = std::to_string(pool_i->pool_alloc_alignment/1024)+"KB";
   printLabelStr("Alloc Alignment:", al_str.c_str(), indent);
 
-  printLabelStr("Acessible by all:", (pool_i->pl_access ? "TRUE" : "FALSE"),
+  printLabelStr("Accessible by all:", (pool_i->pl_access ? "TRUE" : "FALSE"),
                                                                       indent);
 }
 
