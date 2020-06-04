@@ -1,9 +1,4 @@
 #
-# Minimum version of cmake required
-#
-cmake_minimum_required(VERSION 3.5.0)
-include ( GNUInstallDirs )
-#
 # GCC 4.8 or higher compiler required.
 #
 #   Required Defines on cmake command line
@@ -35,6 +30,17 @@ include ( GNUInstallDirs )
 #
 # Currently support for Windows platform is not present
 #
+
+#
+# Minimum version of cmake required
+#
+cmake_minimum_required(VERSION 3.5.0)
+
+set(ROCMINFO_EXE "rocminfo")
+set(PROJECT_NAME ${ROCMINFO_EXE})
+project (${PROJECT_NAME})
+
+include ( GNUInstallDirs )
 if(WIN32)
   message("This sample is not supported on Windows platform")
   return()
@@ -51,40 +57,7 @@ include(utils)
 # Process input variables
 #
 
-# Required Defines first:
-set(ROCRTST_BLD_BITS CACHE "64" STRING "Either 32 or 64")
-set(ROCM_DIR CACHE PATH "Root for RocM install")
-set(ROCR_INC_DIR ${ROCM_DIR}/include CACHE PATH "Path for RocM includes")
-set(ROCR_LIB_DIR ${ROCM_DIR}/lib CACHE PATH "Path for RocM libraries")
-#
-# Determine ROCR Header files are present
-#
-if(NOT EXISTS ${ROCR_INC_DIR}/hsa/hsa.h)
-  message(FATAL_ERROR, "ERROR: ${ROCR_INC_DIR}/hsa/hsa.h does not exist. Check value of ROCM_DIR define")
-  return()
-endif()
-
-# Determine ROCR Library files are present
-#
-if("${ROCRTST_BLD_BITS}" STREQUAL 32)
-  set (ONLY64STR "")
-  set (IS64BIT 0)
-else()
-  set (ONLY64STR "64")
-  set (IS64BIT 1)
-endif()
-#
-if (${IS64BIT} EQUAL 0)
-  if(NOT EXISTS ${ROCR_LIB_DIR}/libhsa-runtime.so)
-    message(FATAL_ERROR, "ERROR: ${ROCR_LIB_DIR}/libhsa-runtime.so doesn't exist. Check value of ROCM_DIR define")
-    return()
-  endif()
-else()
-  if(NOT EXISTS ${ROCR_LIB_DIR}/libhsa-runtime64.so)
-    message(FATAL_ERROR, "ERROR: Define ROCR_LIB_DIR pointing to ROCR libraries is not set")
-    return()
-  endif()
-endif()
+find_package(hsa-runtime64 1.0 REQUIRED )
 
 string(TOLOWER "${ROCRTST_BLD_TYPE}" tmp)
 if("${tmp}" STREQUAL release)
@@ -94,15 +67,6 @@ else()
   set(BUILD_TYPE "Debug")
   set(ISDEBUG 1)
 endif()
-
-# Set Name for Samples Project
-#
-
-set(ROCMINFO_EXE "rocminfo")
-set(PROJECT_NAME ${ROCMINFO_EXE})
-project (${PROJECT_NAME})
-
-
 
 # The following default version values should be updated as appropriate for
 # ABI breaks (update MAJOR and MINOR), and ABI/API additions (update MINOR).
@@ -133,7 +97,6 @@ message("Package version: ${PKG_VERSION_STR}")
 #
 message("")
 message("Build Configuration:")
-message("-------------IS64BIT: " ${IS64BIT})
 message("-----------BuildType: " ${BUILD_TYPE})
 message("------------Compiler: " ${CMAKE_CXX_COMPILER})
 message("-------------Version: " ${CMAKE_CXX_COMPILER_VERSION})
@@ -176,17 +139,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmerge-all-constants")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fms-extensions")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64")
 
 #
 # Extend the compiler flags for 64-bit builds
 #
-if (IS64BIT)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64")
-  if((${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64") OR (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64"))
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2")
-  endif()
-else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+if((${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64") OR (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64"))
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2")
 endif()
 
 #
@@ -195,21 +154,6 @@ endif()
 if(ISDEBUG)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb -O0")
 endif()
-
-#
-# Linux Linker options
-##
-# Specify the directory containing various libraries of ROCR
-# to be linked against for building ROC Perf applications
-#
-link_directories(${ROCR_LIB_DIR})
-
-#
-# Extend the list of libraries to be used for linking ROC Perf Apps
-#
-set(ROCR_LIBS ${ROCR_LIBS} hsa-runtime${ONLY64STR})
-
-include_directories(${ROCR_INC_DIR} ${OPENCL_INC_DIR})
 
 ###########################
 # rocm_agent_enumerator
@@ -223,7 +167,7 @@ configure_file(rocm_agent_enumerator rocm_agent_enumerator COPYONLY)
 ###########################
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} ROCMINFO_SOURCES)
 add_executable(${ROCMINFO_EXE} ${ROCMINFO_SOURCES})
-target_link_libraries(${ROCMINFO_EXE} ${ROCR_LIBS} c stdc++ dl pthread rt)
+target_link_libraries(${ROCMINFO_EXE} hsa-runtime64::hsa-runtime64)
 
 ###########################
 # Install directives
