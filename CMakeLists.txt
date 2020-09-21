@@ -34,7 +34,7 @@
 #
 # Minimum version of cmake required
 #
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.6.3)
 
 set(ROCMINFO_EXE "rocminfo")
 set(PROJECT_NAME ${ROCMINFO_EXE})
@@ -184,35 +184,50 @@ install (
 ###########################
 # Packaging directives
 ###########################
-# set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
-set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PKG_VERSION_STR}")
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
+set(CPACK_PACKAGE_VERSION_MAJOR "${PKG_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PKG_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PKG_VERSION_PATCH}")
+set(CPACK_PACKAGE_CONTACT "AMD Rocminfo Support <rocminfo.support@amd.com>")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Radeon Open Compute (ROCm) Runtime rocminfo tool")
 
-if (NOT DEFINED CPACK_PACKAGE_VENDOR)
-    set(CPACK_PACKAGE_VENDOR "AMD")
-endif ()
-
-if (NOT DEFINED CPACK_PACKAGE_DESCRIPTION_SUMMARY)
-    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Radeon Open Compute (ROCm) Runtime rocminfo tool")
-endif ()
-
-
-if (NOT DEFINED CPACK_PACKAGE_CONTACT)
-    set(CPACK_PACKAGE_CONTACT "Advanced Micro Devices Inc.")
+#Make proper version for appending
+#Default Value is 99999, setting it first
+set(ROCM_VERSION_FOR_PACKAGE "99999")
+if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
+  set(ROCM_VERSION_FOR_PACKAGE $ENV{ROCM_LIBPATCH_VERSION})
 endif()
 
-###########################
-# Debian package specific variables
-###########################
+#Debian package specific variables
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE ${CPACK_DEBIAN_PACKAGE_HOMEPAGE} CACHE STRING "https://github.com/RadeonOpenCompute/ROCm")
+if (DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
+   set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
+else()
+   set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
+endif()
 
-###########################
-# RPM package specific variables
-###########################
-if ( DEFINED CPACK_PACKAGING_INSTALL_PREFIX )
-    set ( CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "${CPACK_PACKAGING_INSTALL_PREFIX} ${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" )
-endif ( )
+#RPM package specific variables
+if(DEFINED CPACK_PACKAGING_INSTALL_PREFIX)
+  set ( CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "${CPACK_PACKAGING_INSTALL_PREFIX} ${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" )
+endif()
+if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
+  set(CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE})
+else()
+  set(CPACK_RPM_PACKAGE_RELEASE "local")
+endif()
 
-###########################
-# Include packaging
-###########################
+#Set rpm distro
+if(CPACK_RPM_PACKAGE_RELEASE)
+  set(CPACK_RPM_PACKAGE_RELEASE_DIST ON)
+endif()
+
+#Prepare final version for the CAPACK use
+set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}.${ROCM_VERSION_FOR_PACKAGE}")
+
+#Set the names now using CPACK utility
+set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
+set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
+
 include ( CPack )
