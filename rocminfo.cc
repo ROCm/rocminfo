@@ -1033,13 +1033,14 @@ AcquireAndDisplayAgentInfo(hsa_agent_t agent, void* data) {
   return HSA_STATUS_SUCCESS;
 }
 
-void CheckInitialState(void) {
+int CheckInitialState(void) {
   // Check kernel module for ROCk is loaded
   FILE *fd = popen("lsmod | grep amdgpu", "r");
   char buf[16];
   if (fread (buf, 1, sizeof (buf), fd) <= 0) {
     printf("%sROCk module is NOT loaded, possibly no GPU devices%s\n",
                                                           COL_RED, COL_RESET);
+    return -1;
   } else {
     printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
   }
@@ -1059,9 +1060,7 @@ void CheckInitialState(void) {
   int open_kfd = open("/dev/kfd", O_RDWR);
   if (open_kfd >= 0) {
       close(open_kfd);
-      printf("%sAble to open /dev/kfd read-write%s\n",
-             COL_WHT, COL_RESET);
-      return;
+      return 0;
   }
 
   printf("%sUnable to open /dev/kfd read-write: %s%s\n",
@@ -1085,21 +1084,21 @@ void CheckInitialState(void) {
     printf("%sFailed to get group info to check"
            " for %s group membership%s\n", COL_RED, kfd_gr_name,
            COL_RESET);
-    return;
+    return -1;
   }
 
   if (getlogin_r(u_name, 32)) {
     printf("%sFailed to get user name to check for"
            " %s group membership%s\n", COL_RED, kfd_gr_name,
            COL_RESET);
-    return;
+    return -1;
   }
 
   pw = getpwnam(u_name); // NOLINT
   if (pw == NULL) {
     printf("%sFailed to find pwd entry for user %s%s\n",
                                                   COL_RED, u_name, COL_RESET);
-    return;
+    return -1;
   }
 
   (void)getgrouplist(u_name, pw->pw_gid, NULL, &num_groups);
@@ -1107,7 +1106,7 @@ void CheckInitialState(void) {
   if (getgrouplist(u_name, pw->pw_gid, groups, &num_groups) == -1) {
     printf("%sFailed to get user group list%s\n", COL_RED, COL_RESET);
     delete []groups;
-    return;
+    return -1;
   }
 
   for (int i = 0; i < num_groups; ++i) {
@@ -1125,7 +1124,7 @@ void CheckInitialState(void) {
   }
 
   delete []groups;
-  return;
+  return -1;
 }
 
 // Print out all static information known to HSA about the target system.
@@ -1137,7 +1136,9 @@ void CheckInitialState(void) {
 int main(int argc, char* argv[]) {
   hsa_status_t err;
 
-  CheckInitialState();
+  if (CheckInitialState()) {
+    return 1;
+  }
   err = hsa_init();
   RET_IF_HSA_ERR(err)
 
@@ -1166,6 +1167,7 @@ int main(int argc, char* argv[]) {
 
   err = hsa_shut_down();
   RET_IF_HSA_ERR(err);
+  return 0;
 }
 
 #undef RET_IF_HSA_ERR
