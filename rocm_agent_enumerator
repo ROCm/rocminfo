@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 # get current working directory
 CWD = os.path.dirname(os.path.realpath(__file__))
@@ -125,8 +126,24 @@ def readFromROCMINFO(search_arch_name = False):
   rocminfo_executable = os.path.join(CWD, "rocminfo")
 
   try:
-    # run rocminfo
-    rocminfo_output = subprocess.Popen(rocminfo_executable, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").split('\n')
+    t0 = time.time()
+    while 1:
+      t1 = time.time()
+      # quit after retrying rocminfo for a minute.
+      if t1 - t0 > 60.0:
+        print("Timeout querying rocminfo.  Are you compiling with more than 254 threads?")
+        break
+      # run rocminfo
+      rocminfo_output = subprocess.Popen(rocminfo_executable, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").split('\n')
+      term1 = re.compile("Cannot allocate memory")
+      term2 = re.compile("HSA_STATUS_ERROR_OUT_OF_RESOURCES")
+      done = 1
+      for line in rocminfo_output:
+        if term1.search(line) is not None or term2.search(line) is not None:
+          done = 0
+          break
+      if done:
+        break
   except:
     rocminfo_output = []
 
