@@ -55,8 +55,8 @@
 #include <string>
 #include <sstream>
 
-#include "hsa.h"
-#include "hsa_ext_amd.h"
+#include "hsa/hsa.h"
+#include "hsa/hsa_ext_amd.h"
 
 #define COL_BLU  "\x1B[34m"
 #define COL_KCYN  "\x1B[36m"
