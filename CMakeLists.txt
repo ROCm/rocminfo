@@ -207,6 +207,7 @@ if (DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
 else()
    set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
 endif()
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-core")
 
 #RPM package specific variables
 if(DEFINED CPACK_PACKAGING_INSTALL_PREFIX)
@@ -217,17 +218,23 @@ if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
 else()
   set(CPACK_RPM_PACKAGE_RELEASE "local")
 endif()
+set(CPACK_RPM_PACKAGE_REQUIRES "rocm-core")
 
 #Set rpm distro
 if(CPACK_RPM_PACKAGE_RELEASE)
   set(CPACK_RPM_PACKAGE_RELEASE_DIST ON)
 endif()
 
-#Prepare final version for the CAPACK use
+#Prepare final version for the CPACK use
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}.${ROCM_VERSION_FOR_PACKAGE}")
 
 #Set the names now using CPACK utility
 set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
 set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
+# Remove dependency on rocm-core if -DROCM_DEP_ROCMCORE=ON not given to cmake
+if(NOT ROCM_DEP_ROCMCORE)
+    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_RPM_PACKAGE_REQUIRES ${CPACK_RPM_PACKAGE_REQUIRES})
+    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_DEBIAN_PACKAGE_DEPENDS ${CPACK_DEBIAN_PACKAGE_DEPENDS})
+endif()
 
 include ( CPack )
