@@ -995,6 +995,8 @@ AcquireAndDisplayAgentInfo(hsa_agent_t agent, void* data) {
   err = AcquireAgentInfo(agent, &agent_i);
   RET_IF_HSA_ERR(err);
 
+  std::string ind(kIndentSize, ' ');
+
   printLabel("*******", true);
   std::string agent_ind("Agent ");
   agent_ind += std::to_string(*agent_number).c_str();
@@ -1031,16 +1033,16 @@ AcquireAndDisplayAgentInfo(hsa_agent_t agent, void* data) {
 
 int CheckInitialState(void) {
   // Check kernel module for ROCk is loaded
-  FILE *fd = popen("lsmod | grep amdgpu", "r");
-  char buf[16];
-  if (fread (buf, 1, sizeof (buf), fd) == 0) {
+  int module_dir;
+  module_dir = open("/sys/module/amdgpu", O_DIRECTORY);
+  if (module_dir < 0) {
     printf("%sROCk module is NOT loaded, possibly no GPU devices%s\n",
                                                           COL_RED, COL_RESET);
     return -1;
   } else {
     printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
+	close(module_dir);
   }
-  pclose(fd);
 
   // Check if user belongs to the group for /dev/kfd (e.g. "video" or
   // "render")
