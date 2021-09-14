@@ -31,7 +31,7 @@ rocm_agent_enumerator, will be in the build folder.
 
 "rocminfo" gives information about the HSA system attributes and agents.
 
-"rocm_agent_enumerator" prints the list of available AMD GCN ISA. There exist four different ways how it is generated:
+"rocm_agent_enumerator" prints the list of available AMD GCN ISA or architecture names. With the option '-name', it prints out available architectures names obtained from rocminfo. Otherwise, it generates ISA in one of four different ways:
 
 1. ROCM_TARGET_LST : a user defined environment variable, set to the path and filename where to find the "target.lst" file. This can be used in an install environment with sandbox, where execution of "rocminfo" is not possible.
 

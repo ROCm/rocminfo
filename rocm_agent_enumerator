@@ -52,6 +52,14 @@ def getGCNISA(line, match_from_beginning = False):
    return result.group(0)
  return None
 
+@staticVars(search_name=re.compile("gfx[0-9a-fA-F]+:[-+:\w]+"))
+def getGCNArchName(line):
+ result = getGCNArchName.search_name.search(line)
+
+ if result is not None:
+   return result.group(0)
+ return None
+
 def readFromTargetLstFile():
   target_list = []
 
@@ -71,9 +79,8 @@ def readFromTargetLstFile():
 
   return target_list
 
-def readFromROCMINFO():
+def readFromROCMINFO(search_arch_name = False):
   target_list = []
-
   # locate rocminfo binary which should be placed at the same directory with
   # this script
   rocminfo_executable = os.path.join(CWD, "rocminfo")
@@ -85,10 +92,16 @@ def readFromROCMINFO():
     rocminfo_output = []
 
   # search AMDGCN gfx ISA
-  line_search_term = re.compile("\A\s+Name:\s+(gfx\d+)")
+  if search_arch_name is True:
+    line_search_term = re.compile("\A\s+Name:\s+(amdgcn-amd-amdhsa--gfx\d+)")
+  else:
+    line_search_term = re.compile("\A\s+Name:\s+(gfx\d+)")
   for line in rocminfo_output:
     if line_search_term.match(line) is not None:
-      target = getGCNISA(line)
+      if search_arch_name is True:
+        target = getGCNArchName(line)
+      else:
+        target = getGCNISA(line)
       if target is not None:
         target_list.append(target)
 
@@ -118,33 +131,38 @@ def readFromLSPCI():
   return target_list
 
 def main():
-  """Prints the list of available AMD GCN ISA
+  if len(sys.argv) == 2 and sys.argv[1] == '-name' :
+    """ Prints the list of available AMD GCN target names extracted from rocminfo, a tool
+        shipped with this script to enumerate GPU agents available on a working ROCm stack."""
+    target_list = readFromROCMINFO(True) 
+  else:
+    """Prints the list of available AMD GCN ISA
 
-  The program collects the list in 3 different ways, in the order of
-  precendence:
+    The program collects the list in 3 different ways, in the order of
+    precendence:
 
-  1. ROCM_TARGET_LST : a user defined environment variable, set to the path and
+    1. ROCM_TARGET_LST : a user defined environment variable, set to the path and
                        filename where to find the "target.lst" file. This can be
                        used in an install environment with sandbox, where
                        execution of "rocminfo" is not possible.
-  2. target.lst : user-supplied text file. This is used in a container setting
+    2. target.lst : user-supplied text file. This is used in a container setting
                   where ROCm stack may usually not available.
-  3. rocminfo : a tool shipped with this script to enumerate GPU agents
+    3. rocminfo : a tool shipped with this script to enumerate GPU agents
                 available on a working ROCm stack.
-  4. lspci : enumerate PCI bus and locate supported devices from a hard-coded
+    4. lspci : enumerate PCI bus and locate supported devices from a hard-coded
              lookup table.
-  """
-  target_list = readFromTargetLstFile()
+    """
+    target_list = readFromTargetLstFile()
 
-  if len(target_list) == 0:
-    target_list = readFromROCMINFO()
+    if len(target_list) == 0:
+      target_list = readFromROCMINFO()
 
-  if len(target_list) == 0:
-    target_list = readFromLSPCI()
+    if len(target_list) == 0:
+      target_list = readFromLSPCI()
 
   # workaround to cope with existing rocm_agent_enumerator behavior where gfx000
   # would always be returned
-  print("gfx000")
+    print("gfx000")
 
   for gfx in target_list:
     print(gfx)
