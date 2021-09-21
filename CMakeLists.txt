@@ -129,31 +129,29 @@ add_definitions(-DLITTLEENDIAN_CPU=1)
 #
 # Linux Compiler options
 #
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS}")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-math-errno")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-threadsafe-statics")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmerge-all-constants")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fms-extensions")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64")
+set(ROCMINFO_CXX_FLAGS -std=c++11)
+set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -fexceptions)
+set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -fno-rtti)
+set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -fno-math-errno)
+set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -fno-threadsafe-statics)
+set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -fmerge-all-constants)
+set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -fms-extensions)
+set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -Werror)
+set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -Wall)
+set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -m64)
 
 #
 # Extend the compiler flags for 64-bit builds
 #
 if((${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64") OR (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64"))
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2")
+  set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -msse -msse2)
 endif()
 
 #
 # Add compiler flags to include symbol information for debug builds
 #
 if(ISDEBUG)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb -O0")
+  set(ROCMINFO_CXX_FLAGS ${ROCMINFO_CXX_FLAGS} -ggdb -O0)
 endif()
 
 ###########################
@@ -169,6 +167,8 @@ configure_file(rocm_agent_enumerator rocm_agent_enumerator COPYONLY)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} ROCMINFO_SOURCES)
 add_executable(${ROCMINFO_EXE} ${ROCMINFO_SOURCES})
 target_link_libraries(${ROCMINFO_EXE} hsa-runtime64::hsa-runtime64)
+
+target_compile_options(${ROCMINFO_EXE} PRIVATE ${ROCMINFO_CXX_FLAGS})
 
 ###########################
 # Install directives
