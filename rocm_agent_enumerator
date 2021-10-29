@@ -186,18 +186,18 @@ def main():
                        execution of "rocminfo" is not possible.
     2. target.lst : user-supplied text file. This is used in a container setting
                   where ROCm stack may usually not available.
-    3. rocminfo : a tool shipped with this script to enumerate GPU agents
+    3. lspci : enumerate PCI bus and locate supported devices from a hard-coded
+               lookup table.
+    4. rocminfo : a tool shipped with this script to enumerate GPU agents
                 available on a working ROCm stack.
-    4. lspci : enumerate PCI bus and locate supported devices from a hard-coded
-             lookup table.
     """
     target_list = readFromTargetLstFile()
 
     if len(target_list) == 0:
-      target_list = readFromROCMINFO()
+      target_list = readFromLSPCI()
 
     if len(target_list) == 0:
-      target_list = readFromLSPCI()
+      target_list = readFromROCMINFO()
 
     # workaround to cope with existing rocm_agent_enumerator behavior where gfx000
     # would always be returned
