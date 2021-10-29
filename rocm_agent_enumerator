@@ -169,6 +169,31 @@ def readFromLSPCI():
 
   return target_list
 
+def readFromKFD():
+  target_list = []
+
+  topology_dir = '/sys/class/kfd/kfd/topology/nodes/'
+  for node in sorted(os.listdir(topology_dir)):
+    node_path = os.path.join(topology_dir, node)
+    if os.path.isdir(node_path):
+      prop_path = node_path + '/properties'
+      if os.path.isfile(prop_path):
+        target_search_term = re.compile("gfx_target_version.+")
+        with open(prop_path) as f:
+          line = f.readline()
+          while line != '' :
+            search_result = target_search_term.search(line)
+            if search_result is not None:
+              device_id = int(search_result.group(0).split(' ')[1], 10)
+              if device_id != 0:
+                major_ver = int((device_id / 10000) % 100)
+                minor_ver = int((device_id / 100) % 100)
+                stepping_ver = int(device_id % 100)
+                target_list.append("gfx" + format(major_ver, 'x') + format(minor_ver, 'x') + format(stepping_ver, 'x'))
+            line = f.readline()
+
+  return target_list
+
 def main():
   if len(sys.argv) == 2 and sys.argv[1] == '-name' :
     """ Prints the list of available AMD GCN target names extracted from rocminfo, a tool
@@ -186,12 +211,17 @@ def main():
                        execution of "rocminfo" is not possible.
     2. target.lst : user-supplied text file. This is used in a container setting
                   where ROCm stack may usually not available.
-    3. lspci : enumerate PCI bus and locate supported devices from a hard-coded
+    3. HSA topology : gathers the information from the HSA node topology in
+                      /sys/class/kfd/kfd/topology/nodes/
+    4. lspci : enumerate PCI bus and locate supported devices from a hard-coded
                lookup table.
-    4. rocminfo : a tool shipped with this script to enumerate GPU agents
+    5. rocminfo : a tool shipped with this script to enumerate GPU agents
                 available on a working ROCm stack.
     """
     target_list = readFromTargetLstFile()
+
+    if len(target_list) == 0:
+      target_list = readFromKFD()
 
     if len(target_list) == 0:
       target_list = readFromLSPCI()
