@@ -1044,6 +1044,7 @@ int CheckInitialState(void) {
   } else {
     printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
   }
+  pclose(fd);
 
   // Check if user belongs to the group for /dev/kfd (e.g. "video" or
   // "render")
