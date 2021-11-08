@@ -1058,6 +1058,9 @@ int CheckInitialState(void) {
 	    }
         }
         if ( !docker_env ) return -1;
+    } else {
+        // this is certainly weird - error
+        return -1;
     }
   } else {
     printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
