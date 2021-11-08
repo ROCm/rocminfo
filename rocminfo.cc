@@ -51,6 +51,7 @@
 #include <unistd.h>
 #include <pwd.h>
 
+#include <fstream>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -1040,7 +1041,24 @@ int CheckInitialState(void) {
   if (fread (buf, 1, sizeof (buf), fd) <= 0) {
     printf("%sROCk module is NOT loaded, possibly no GPU devices%s\n",
                                                           COL_RED, COL_RESET);
-    return -1;
+    // Check if rocminfo is executed within a docker environment (where this is OK)
+    std::ifstream cgroups( "/proc/self/cgroup" );
+    if (cgroups) {
+        std::stringstream buffer;
+        buffer << cgroups.rdbuf();
+        cgroups.close();
+
+        std::string line;
+        bool docker_env = false;
+	while ( std::getline(buffer, line) ) {
+            if ( line.find( "docker" )) {
+                docker_env = true;
+                printf("Docker environment detected - missing ROCk module expected.\n");
+                break;
+	    }
+        }
+        if ( !docker_env ) return -1;
+    }
   } else {
     printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
   }
