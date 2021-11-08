@@ -1050,7 +1050,7 @@ int CheckInitialState(void) {
 
         std::string line;
         bool docker_env = false;
-	while ( std::getline(buffer, line) ) {
+        while ( std::getline(buffer, line) ) {
             if ( line.find( "docker" )) {
                 docker_env = true;
                 printf("Docker environment detected - missing ROCk module expected.\n");
