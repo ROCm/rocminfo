@@ -192,7 +192,11 @@ set(CPACK_PACKAGE_VERSION_MINOR "${PKG_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${PKG_VERSION_PATCH}")
 set(CPACK_PACKAGE_CONTACT "AMD Rocminfo Support <rocminfo.support@amd.com>")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
+set( CPACK_RPM_PACKAGE_LICENSE "NCSA" )
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Radeon Open Compute (ROCm) Runtime rocminfo tool")
+
+#Install license file
+install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION share/doc/${CPACK_PACKAGE_NAME})
 
 #Make proper version for appending
 #Default Value is 99999, setting it first
