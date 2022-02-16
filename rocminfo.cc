@@ -187,7 +187,6 @@ enum rocmi_int_format {
 std::string int_to_string(uint32_t i,
                    uint32_t fmt = ROCMI_INT_FORMAT_DEC|ROCMI_INT_FORMAT_HEX) {
   std::stringstream sd;
-  std::string ret = "";
   bool need_parens = false;
 
   if (fmt & ROCMI_INT_FORMAT_DEC) {
@@ -209,7 +208,6 @@ std::string int_to_string(uint32_t i,
     if (need_parens) {
       sd << ") ";
     }
-    need_parens = true;
   }
 
   return sd.str();
@@ -218,7 +216,7 @@ std::string int_to_string(uint32_t i,
 static void printLabelInt(char const *l, int d, uint32_t indent_lvl = 0) {
   std::string ind(kIndentSize * indent_lvl, ' ');
 
-  printf("%s%-*s%-*u\n", ind.c_str(), kLabelFieldSize, l, kValueFieldSize, d);
+  printf("%s%-*s%-*d\n", ind.c_str(), kLabelFieldSize, l, kValueFieldSize, d);
 }
 static void printLabelStr(char const *l, char const *s,
                                                     uint32_t indent_lvl = 0) {
@@ -997,8 +995,6 @@ AcquireAndDisplayAgentInfo(hsa_agent_t agent, void* data) {
   err = AcquireAgentInfo(agent, &agent_i);
   RET_IF_HSA_ERR(err);
 
-  std::string ind(kIndentSize, ' ');
-
   printLabel("*******", true);
   std::string agent_ind("Agent ");
   agent_ind += std::to_string(*agent_number).c_str();
@@ -1037,7 +1033,7 @@ int CheckInitialState(void) {
   // Check kernel module for ROCk is loaded
   FILE *fd = popen("lsmod | grep amdgpu", "r");
   char buf[16];
-  if (fread (buf, 1, sizeof (buf), fd) <= 0) {
+  if (fread (buf, 1, sizeof (buf), fd) == 0) {
     printf("%sROCk module is NOT loaded, possibly no GPU devices%s\n",
                                                           COL_RED, COL_RESET);
     return -1;
