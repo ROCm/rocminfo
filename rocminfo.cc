@@ -113,6 +113,7 @@ struct agent_info_t {
   hsa_device_type_t device_type;
   uint32_t cache_size[4];
   uint32_t chip_id;
+  uint32_t asic_revision;
   uint32_t cacheline_size;
   uint32_t max_clock_freq;
   uint32_t internal_node_id;
@@ -382,6 +383,12 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
                                                            &agent_i->chip_id);
   RET_IF_HSA_ERR(err);
 
+  // Get asic revision
+  err = hsa_agent_get_info(agent,
+                           (hsa_agent_info_t) HSA_AMD_AGENT_INFO_ASIC_REVISION,
+                                                           &agent_i->asic_revision);
+  RET_IF_HSA_ERR(err);
+
   // Get cacheline size
   err = hsa_agent_get_info(agent,
                        (hsa_agent_info_t) HSA_AMD_AGENT_INFO_CACHELINE_SIZE,
@@ -567,6 +574,7 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
   }
 
   printLabelStr("Chip ID:", int_to_string(agent_i->chip_id), 1);
+  printLabelStr("ASIC Revision:", int_to_string(agent_i->asic_revision), 1);
   printLabelStr("Cacheline Size:", int_to_string(agent_i->cacheline_size), 1);
   printLabelInt("Max Clock Freq. (MHz):", agent_i->max_clock_freq, 1);
   printLabelInt("BDFID:", agent_i->bdf_id, 1);
