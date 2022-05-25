@@ -196,7 +196,7 @@ set( CPACK_RPM_PACKAGE_LICENSE "NCSA" )
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Radeon Open Compute (ROCm) Runtime rocminfo tool")
 
 #Install license file
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION share/doc/${CPACK_PACKAGE_NAME})
+install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 #Make proper version for appending
 #Default Value is 99999, setting it first
