@@ -95,6 +95,7 @@ struct system_info_t {
     hsa_endianness_t endianness;
     hsa_machine_model_t machine_model;
     bool mwaitx_enabled;
+    bool dmabuf_support;
 };
 
 // This structure holds agent information acquired through hsa info related
@@ -281,6 +282,9 @@ static hsa_status_t AcquireSystemInfo(system_info_t *sys_info) {
   // Get mwaitx mode
   err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_MWAITX_ENABLED,
                                                      &sys_info->mwaitx_enabled);
+  // Get DMABuf support
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_DMABUF_SUPPORTED,
+                                                     &sys_info->dmabuf_support);
   RET_IF_HSA_ERR(err);
   return err;
 }
@@ -310,6 +314,9 @@ static void DisplaySystemInfo(system_info_t const *sys_info) {
 
   printLabel("Mwaitx:");
   printf("%s\n", sys_info->mwaitx_enabled ? "ENABLED" : "DISABLED");
+
+  printLabel("DMAbuf Support:");
+  printf("%s\n", sys_info->dmabuf_support ? "YES" : "NO");
 
   printf("\n");
 }
