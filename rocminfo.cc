@@ -135,6 +135,8 @@ struct agent_info_t {
   uint16_t workgroup_max_dim[3];
   uint16_t bdf_id;
   bool fast_f16;
+  uint32_t pkt_processor_ucode_ver;
+  uint32_t sdma_ucode_ver;
 };
 
 // This structure holds memory pool information acquired through hsa info
@@ -492,6 +494,15 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
                     (hsa_agent_info_t)HSA_AMD_AGENT_INFO_MAX_WAVES_PER_CU,
                                                   &agent_i->max_waves_per_cu);
     RET_IF_HSA_ERR(err);
+
+    err = hsa_agent_get_info(agent,
+                    (hsa_agent_info_t)HSA_AMD_AGENT_INFO_UCODE_VERSION,
+                                                  &agent_i->pkt_processor_ucode_ver);
+    RET_IF_HSA_ERR(err);
+    err = hsa_agent_get_info(agent,
+                    (hsa_agent_info_t)HSA_AMD_AGENT_INFO_SDMA_UCODE_VERSION,
+                                                  &agent_i->sdma_ucode_ver);
+    RET_IF_HSA_ERR(err);
   }
   return err;
 }
@@ -627,6 +638,9 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
     printLabelStr("z", int_to_string(agent_i->grid_max_dim.z), 2);
 
     printLabelInt("Max fbarriers/Workgrp:", agent_i->fbarrier_max_size, 1);
+
+    printLabelInt("Packet Processor uCode::", agent_i->pkt_processor_ucode_ver, 1);
+    printLabelInt("SDMA engine uCode::", agent_i->sdma_ucode_ver, 1);
   }
 }
 
