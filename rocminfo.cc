@@ -137,6 +137,7 @@ struct agent_info_t {
   bool fast_f16;
   uint32_t pkt_processor_ucode_ver;
   uint32_t sdma_ucode_ver;
+  hsa_amd_iommu_version_t iommu_support;
 };
 
 // This structure holds memory pool information acquired through hsa info
@@ -503,6 +504,10 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
                     (hsa_agent_info_t)HSA_AMD_AGENT_INFO_SDMA_UCODE_VERSION,
                                                   &agent_i->sdma_ucode_ver);
     RET_IF_HSA_ERR(err);
+    err = hsa_agent_get_info(agent,
+                    (hsa_agent_info_t)HSA_AMD_AGENT_INFO_IOMMU_SUPPORT,
+                                                  &agent_i->iommu_support);
+    RET_IF_HSA_ERR(err);
   }
   return err;
 }
@@ -641,6 +646,8 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
 
     printLabelInt("Packet Processor uCode::", agent_i->pkt_processor_ucode_ver, 1);
     printLabelInt("SDMA engine uCode::", agent_i->sdma_ucode_ver, 1);
+    printLabelStr("IOMMU Support::",
+                    agent_i->iommu_support == HSA_IOMMU_SUPPORT_V2 ? "V2" : "None", 1);
   }
 }
 
