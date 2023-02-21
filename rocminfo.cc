@@ -94,6 +94,7 @@ struct system_info_t {
     uint64_t max_wait = 0;
     hsa_endianness_t endianness;
     hsa_machine_model_t machine_model;
+    bool mwaitx_enabled;
 };
 
 // This structure holds agent information acquired through hsa info related
@@ -276,6 +277,11 @@ static hsa_status_t AcquireSystemInfo(system_info_t *sys_info) {
   err = hsa_system_get_info(HSA_SYSTEM_INFO_MACHINE_MODEL,
                                                      &sys_info->machine_model);
   RET_IF_HSA_ERR(err);
+
+  // Get mwaitx mode
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_MWAITX_ENABLED,
+                                                     &sys_info->mwaitx_enabled);
+  RET_IF_HSA_ERR(err);
   return err;
 }
 
@@ -301,6 +307,10 @@ static void DisplaySystemInfo(system_info_t const *sys_info) {
   } else if (HSA_ENDIANNESS_BIG == sys_info->endianness) {
     printValueStr("BIG");
   }
+
+  printLabel("Mwaitx:");
+  printf("%s\n", sys_info->mwaitx_enabled ? "ENABLED" : "DISABLED");
+
   printf("\n");
 }
 
