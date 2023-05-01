@@ -51,6 +51,7 @@
 #include <unistd.h>
 #include <pwd.h>
 
+#include <fstream>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -1039,16 +1040,33 @@ AcquireAndDisplayAgentInfo(hsa_agent_t agent, void* data) {
 
 int CheckInitialState(void) {
   // Check kernel module for ROCk is loaded
-  FILE *fd = popen("lsmod | grep amdgpu", "r");
-  char buf[16];
-  if (fread (buf, 1, sizeof (buf), fd) == 0) {
+
+  std::ifstream amdgpu_initstate("/sys/module/amdgpu/initstate");
+  if (amdgpu_initstate){
+    std::stringstream buffer;
+    buffer << amdgpu_initstate.rdbuf();
+    amdgpu_initstate.close();
+
+    std::string line;
+    bool is_live = false;
+    while (std::getline(buffer, line)){
+      if (line.find( "live" ) != std::string::npos){
+        is_live = true;
+        break;
+      }
+    }
+    if (is_live){
+      printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
+    } else {
+      printf("%sROCk module is NOT live, possibly no GPU devices%s\n",
+                                                          COL_RED, COL_RESET);
+      return -1;
+    }
+  } else {
     printf("%sROCk module is NOT loaded, possibly no GPU devices%s\n",
                                                           COL_RED, COL_RESET);
     return -1;
-  } else {
-    printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
   }
-  pclose(fd);
 
   // Check if user belongs to the group for /dev/kfd (e.g. "video" or
   // "render")

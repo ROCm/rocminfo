@@ -195,10 +195,15 @@ def readFromKFD():
       node_path = os.path.join(topology_dir, node)
       if os.path.isdir(node_path):
         prop_path = node_path + '/properties'
-        if os.path.isfile(prop_path):
+        if os.path.isfile(prop_path) and os.access(prop_path, os.R_OK):
           target_search_term = re.compile("gfx_target_version.+")
           with open(prop_path) as f:
-            line = f.readline()
+            try:
+              line = f.readline()
+            except PermissionError:
+              # We may have a subsystem (e.g. scheduler) limiting device visibility which
+              # could cause a permission error.
+              line = ''
             while line != '' :
               search_result = target_search_term.search(line)
               if search_result is not None:
