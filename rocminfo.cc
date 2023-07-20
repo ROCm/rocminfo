@@ -725,6 +725,11 @@ static void MakeGlobalFlagsString(uint32_t global_flag, std::string* out_str) {
     flags.push_back("COARSE GRAINED");
   }
 
+  if (HSA_AMD_MEMORY_POOL_GLOBAL_FLAG_EXTENDED_SCOPE_FINE_GRAINED & global_flag)
+  {
+    flags.push_back("EXTENDED FINE GRAINED");
+  }
+
   if (flags.size() > 0) {
     *out_str += flags[0];
   }
