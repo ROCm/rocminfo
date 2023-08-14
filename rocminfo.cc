@@ -137,6 +137,7 @@ struct agent_info_t {
   uint16_t workgroup_max_dim[3];
   uint16_t bdf_id;
   bool fast_f16;
+  bool coherent_host_access;
   uint32_t pkt_processor_ucode_ver;
   uint32_t sdma_ucode_ver;
   hsa_amd_iommu_version_t iommu_support;
@@ -471,6 +472,12 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
                                                       &agent_i->compute_unit);
   RET_IF_HSA_ERR(err);
 
+  // Get coherent Host access
+  err = hsa_agent_get_info(agent,
+                           (hsa_agent_info_t) HSA_AMD_AGENT_INFO_SVM_DIRECT_HOST_ACCESS,
+                           &agent_i->coherent_host_access);
+  RET_IF_HSA_ERR(err);
+
   // Check if the agent is kernel agent
   if (agent_i->agent_feature & HSA_AGENT_FEATURE_KERNEL_DISPATCH) {
     // Get flaf of fast_f16 operation
@@ -618,6 +625,9 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
   printLabelInt("Shader Engines:", agent_i->shader_engs, 1);
   printLabelInt("Shader Arrs. per Eng.:", agent_i->shader_arrs_per_sh_eng, 1);
   printLabelInt("WatchPts on Addr. Ranges:", agent_i->max_addr_watch_pts, 1);
+
+  if (agent_i->device_type == HSA_DEVICE_TYPE_GPU)
+    printLabelStr("Coherent Host Access:", agent_i->coherent_host_access ? "TRUE":"FALSE", 1);
 
   printLabel("Features:", false, 1);
   if (agent_i->agent_feature & HSA_AGENT_FEATURE_KERNEL_DISPATCH) {
