@@ -151,6 +151,7 @@ typedef struct {
     size_t pool_size;
     bool alloc_allowed;
     size_t alloc_granule;
+    size_t alloc_rec_granule;
     size_t pool_alloc_alignment;
     bool pl_access;
     uint32_t global_flag;
@@ -706,6 +707,11 @@ static hsa_status_t AcquirePoolInfo(hsa_amd_memory_pool_t pool,
   RET_IF_HSA_ERR(err);
 
   err = hsa_amd_memory_pool_get_info(pool,
+                                     HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_REC_GRANULE,
+                                     &pool_i->alloc_rec_granule);
+  RET_IF_HSA_ERR(err);
+
+  err = hsa_amd_memory_pool_get_info(pool,
                            HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_ALIGNMENT,
                                                &pool_i->pool_alloc_alignment);
   RET_IF_HSA_ERR(err);
@@ -789,6 +795,9 @@ static void DisplayPoolInfo(pool_info_t *pool_i, uint32_t indent) {
                                                                       indent);
   std::string gr_str = std::to_string(pool_i->alloc_granule/1024)+"KB";
   printLabelStr("Alloc Granule:", gr_str.c_str(), indent);
+
+  std::string rgr_str = std::to_string(pool_i->alloc_rec_granule / 1024) + "KB";
+  printLabelStr("Alloc Recommended Granule:", rgr_str.c_str(), indent);
 
   std::string al_str = std::to_string(pool_i->pool_alloc_alignment/1024)+"KB";
   printLabelStr("Alloc Alignment:", al_str.c_str(), indent);
