@@ -1118,7 +1118,17 @@ int CheckInitialState(void) {
       }
     }
     if (is_live){
-      printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
+      std::ifstream amdgpu_version("/sys/module/amdgpu/version");
+      if (amdgpu_version){
+        std::stringstream buffer;
+        buffer << amdgpu_version.rdbuf();
+        std::string vers;
+        std::getline(buffer, vers);
+        amdgpu_version.close();
+        printf("%sROCk module version %s is loaded%s\n", COL_WHT, vers.c_str(), COL_RESET);
+      } else {
+        printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
+      }
     } else {
       printf("%sROCk module is NOT live, possibly no GPU devices%s\n",
                                                           COL_RED, COL_RESET);
