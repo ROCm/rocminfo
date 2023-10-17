@@ -90,6 +90,7 @@
 // calls, and is later used for reference when displaying the information.
 struct system_info_t {
     uint16_t major, minor;
+    uint16_t ext_major, ext_minor;
     uint64_t timestamp_frequency = 0;
     uint64_t max_wait = 0;
     hsa_endianness_t endianness;
@@ -262,6 +263,14 @@ static hsa_status_t AcquireSystemInfo(system_info_t *sys_info) {
   err = hsa_system_get_info(HSA_SYSTEM_INFO_VERSION_MINOR, &sys_info->minor);
   RET_IF_HSA_ERR(err);
 
+  // Get HSA Ext Interface version
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_EXT_VERSION_MAJOR,
+                                                     &sys_info->ext_major);
+  RET_IF_HSA_ERR(err);
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_EXT_VERSION_MINOR,
+                                                     &sys_info->ext_minor);
+  RET_IF_HSA_ERR(err);
+
   // Get timestamp frequency
   err = hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY,
                                               &sys_info->timestamp_frequency);
@@ -288,12 +297,15 @@ static hsa_status_t AcquireSystemInfo(system_info_t *sys_info) {
   err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_DMABUF_SUPPORTED,
                                                      &sys_info->dmabuf_support);
   RET_IF_HSA_ERR(err);
+
   return err;
 }
 
 static void DisplaySystemInfo(system_info_t const *sys_info) {
   printLabel("Runtime Version:");
   printf("%d.%d\n", sys_info->major, sys_info->minor);
+  printLabel("Runtime Ext Version:");
+  printf("%d.%d\n", sys_info->ext_major, sys_info->ext_minor);
   printLabel("System Timestamp Freq.:");
   printf("%fMHz\n", sys_info->timestamp_frequency / 1e6);
   printLabel("Sig. Max Wait Duration:");
