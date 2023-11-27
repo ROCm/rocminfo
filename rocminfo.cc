@@ -142,6 +142,7 @@ struct agent_info_t {
   uint32_t pkt_processor_ucode_ver;
   uint32_t sdma_ucode_ver;
   hsa_amd_iommu_version_t iommu_support;
+  uint8_t memory_properties[8];
 };
 
 // This structure holds memory pool information acquired through hsa info
@@ -491,6 +492,12 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
                            &agent_i->coherent_host_access);
   RET_IF_HSA_ERR(err);
 
+  // Get memory properties
+  err = hsa_agent_get_info(agent,
+                           (hsa_agent_info_t) HSA_AMD_AGENT_INFO_MEMORY_PROPERTIES,
+                           agent_i->memory_properties);
+  RET_IF_HSA_ERR(err);
+
   // Check if the agent is kernel agent
   if (agent_i->agent_feature & HSA_AGENT_FEATURE_KERNEL_DISPATCH) {
     // Get flaf of fast_f16 operation
@@ -641,6 +648,11 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
 
   if (agent_i->device_type == HSA_DEVICE_TYPE_GPU)
     printLabelStr("Coherent Host Access:", agent_i->coherent_host_access ? "TRUE":"FALSE", 1);
+
+  printLabel("Memory Properties:", false, 1);
+  if (hsa_flag_isset64(agent_i->memory_properties, HSA_AMD_MEMORY_PROPERTY_AGENT_IS_APU))
+    printf("%s", "APU");
+  printf("\n");
 
   printLabel("Features:", false, 1);
   if (agent_i->agent_feature & HSA_AGENT_FEATURE_KERNEL_DISPATCH) {
