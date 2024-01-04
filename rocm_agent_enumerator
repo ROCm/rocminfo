@@ -81,7 +81,7 @@ def staticVars(**kwargs):
     return func
   return deco
 
-@staticVars(search_term=re.compile("gfx[0-9a-fA-F]+"))
+@staticVars(search_term=re.compile(r"gfx[0-9a-fA-F]+"))
 def getGCNISA(line, match_from_beginning = False):
  if match_from_beginning is True:
    result = getGCNISA.search_term.match(line)
@@ -135,8 +135,8 @@ def readFromROCMINFO(search_arch_name = False):
         break
       # run rocminfo
       rocminfo_output = subprocess.Popen(rocminfo_executable, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").split('\n')
-      term1 = re.compile("Cannot allocate memory")
-      term2 = re.compile("HSA_STATUS_ERROR_OUT_OF_RESOURCES")
+      term1 = re.compile(r"Cannot allocate memory")
+      term2 = re.compile(r"HSA_STATUS_ERROR_OUT_OF_RESOURCES")
       done = 1
       for line in rocminfo_output:
         if term1.search(line) is not None or term2.search(line) is not None:
@@ -196,7 +196,7 @@ def readFromKFD():
       if os.path.isdir(node_path):
         prop_path = node_path + '/properties'
         if os.path.isfile(prop_path) and os.access(prop_path, os.R_OK):
-          target_search_term = re.compile("gfx_target_version.+")
+          target_search_term = re.compile(r"gfx_target_version.+")
           with open(prop_path) as f:
             try:
               line = f.readline()
