@@ -46,6 +46,9 @@ if(WIN32)
   return()
 endif()
 
+# Generate static package, when BUILD_SHARED_LIBS is set to OFF.
+# Default to ON
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 ## Set default module path if not already set
 if(NOT DEFINED CMAKE_MODULE_PATH)
     set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
@@ -181,7 +184,12 @@ install (
 ###########################
 # Packaging directives
 ###########################
-set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+if(BUILD_SHARED_LIBS)
+  set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+else()
+  set(CPACK_RPM_PACKAGE_NAME "${PROJECT_NAME}-static-devel")
+  set(CPACK_DEBIAN_PACKAGE_NAME "${PROJECT_NAME}-static-dev")
+endif()
 set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
 set(CPACK_PACKAGE_VERSION_MAJOR "${PKG_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${PKG_VERSION_MINOR}")
@@ -239,4 +247,8 @@ set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSIO
 set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
 set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
 
+if(NOT BUILD_SHARED_LIBS)
+  string(REPLACE "hsa-rocr" "hsa-rocr-static-dev" CPACK_DEBIAN_PACKAGE_DEPENDS ${CPACK_DEBIAN_PACKAGE_DEPENDS})
+  string(REPLACE "hsa-rocr" "hsa-rocr-static-devel" CPACK_RPM_PACKAGE_REQUIRES ${CPACK_RPM_PACKAGE_REQUIRES})
+endif()
 include ( CPack )
