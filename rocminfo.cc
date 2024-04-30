@@ -56,8 +56,13 @@
 #include <string>
 #include <sstream>
 
+#include <memory>
+#include <array>
+
 #include "hsa/hsa.h"
 #include "hsa/hsa_ext_amd.h"
+
+using namespace std;
 
 #define COL_BLU  "\x1B[34m"
 #define COL_KCYN  "\x1B[36m"
@@ -189,6 +194,8 @@ static const uint32_t kLabelFieldSize = 25;
 static const uint32_t kValueFieldSize = 35;
 static const uint32_t kIndentSize = 2;
 
+static bool wsl_env = false;
+
 enum rocmi_int_format {
   ROCMI_INT_FORMAT_DEC = 1,
   ROCMI_INT_FORMAT_HEX = 2,
@@ -222,6 +229,35 @@ std::string int_to_string(uint32_t i,
   }
 
   return sd.str();
+}
+
+pair<string, int> exec(const char* cmd) {
+  array<char, 128> buffer;
+  string result;
+  int return_code = -1;
+  auto pclose_wrapper = [&return_code](FILE* cmd){ return_code = pclose(cmd); };
+  { // scope is important, have to make sure the ptr goes out of scope first
+    const unique_ptr<FILE, decltype(pclose_wrapper)> pipe(popen(cmd, "r"), pclose_wrapper);
+    if (pipe) {
+      while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+      }
+    }
+  }
+  return make_pair(result, return_code);
+}
+
+static void DetectWSLEnvironment() {
+  auto process_ret = exec("which wslinfo");
+  if (process_ret.second)
+    return;
+
+  process_ret = exec("wslinfo --msal-proxy-path");
+  if (process_ret.second == 0 &&
+      strcasestr(process_ret.first.c_str(), "msal.wsl.proxy.exe") != nullptr) {
+    printf("WSL environment detected.\n");
+    wsl_env = true;
+  }
 }
 
 static void printLabelInt(char const *l, int d, uint32_t indent_lvl = 0) {
@@ -294,6 +330,7 @@ static hsa_status_t AcquireSystemInfo(system_info_t *sys_info) {
   // Get mwaitx mode
   err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_MWAITX_ENABLED,
                                                      &sys_info->mwaitx_enabled);
+  RET_IF_HSA_ERR(err);
   // Get DMABuf support
   err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_DMABUF_SUPPORTED,
                                                      &sys_info->dmabuf_support);
@@ -558,7 +595,8 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
 
 static void DisplayAgentInfo(agent_info_t *agent_i) {
   printLabelStr("Name:", agent_i->name, 1);
-  printLabelStr("Uuid:", agent_i->uuid, 1);
+  if (!wsl_env || HSA_DEVICE_TYPE_CPU == agent_i->device_type)
+    printLabelStr("Uuid:", agent_i->uuid, 1);
   printLabelStr("Marketing Name:", agent_i->device_mkt_name, 1);
   printLabelStr("Vendor Name:", agent_i->vendor_name, 1);
 
@@ -635,16 +673,20 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
   }
 
   printLabelStr("Chip ID:", int_to_string(agent_i->chip_id), 1);
-  printLabelStr("ASIC Revision:", int_to_string(agent_i->asic_revision), 1);
+  if (!wsl_env)
+    printLabelStr("ASIC Revision:", int_to_string(agent_i->asic_revision), 1);
   printLabelStr("Cacheline Size:", int_to_string(agent_i->cacheline_size), 1);
-  printLabelInt("Max Clock Freq. (MHz):", agent_i->max_clock_freq, 1);
-  printLabelInt("BDFID:", agent_i->bdf_id, 1);
+  if (!wsl_env || HSA_DEVICE_TYPE_GPU == agent_i->device_type)
+    printLabelInt("Max Clock Freq. (MHz):", agent_i->max_clock_freq, 1);
+  if (!wsl_env)
+    printLabelInt("BDFID:", agent_i->bdf_id, 1);
   printLabelInt("Internal Node ID:", agent_i->internal_node_id, 1);
   printLabelInt("Compute Unit:", agent_i->compute_unit, 1);
   printLabelInt("SIMDs per CU:", agent_i->simds_per_cu, 1);
   printLabelInt("Shader Engines:", agent_i->shader_engs, 1);
   printLabelInt("Shader Arrs. per Eng.:", agent_i->shader_arrs_per_sh_eng, 1);
-  printLabelInt("WatchPts on Addr. Ranges:", agent_i->max_addr_watch_pts, 1);
+  if (!wsl_env)
+    printLabelInt("WatchPts on Addr. Ranges:", agent_i->max_addr_watch_pts, 1);
 
   if (agent_i->device_type == HSA_DEVICE_TYPE_GPU)
     printLabelStr("Coherent Host Access:", agent_i->coherent_host_access ? "TRUE":"FALSE", 1);
@@ -1255,7 +1297,9 @@ int CheckInitialState(void) {
 int main(int argc, char* argv[]) {
   hsa_status_t err;
 
-  if (CheckInitialState()) {
+  DetectWSLEnvironment();
+
+  if (!wsl_env && CheckInitialState()) {
     return 1;
   }
   err = hsa_init();
