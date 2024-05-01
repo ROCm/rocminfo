@@ -210,7 +210,7 @@ if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
 endif()
 
 #Debian package specific variables
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "hsa-rocr, kmod, pciutils")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "hsa-rocr, kmod, pciutils, python3, libc6, libgcc-s1, libstdc++6")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE ${CPACK_DEBIAN_PACKAGE_HOMEPAGE} CACHE STRING "https://github.com/RadeonOpenCompute/ROCm")
 if (DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
    set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
@@ -222,7 +222,20 @@ if ( ROCM_DEP_ROCMCORE )
 endif()
 
 #RPM package specific variables
-set(CPACK_RPM_PACKAGE_REQUIRES "hsa-rocr kmod pciutils")
+execute_process(COMMAND rpm --eval %{?dist}
+                 RESULT_VARIABLE PROC_RESULT
+                 OUTPUT_VARIABLE EVAL_RESULT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+message("RESULT_VARIABLE ${PROC_RESULT} OUTPUT_VARIABLE: ${EVAL_RESULT}")
+
+if(PROC_RESULT EQUAL "0" AND "${EVAL_RESULT}" STREQUAL ".el7")
+  # In Centos using parentheses is causing cpack errors.
+  # Set the dependencies specifically for centos
+  set(CPACK_RPM_PACKAGE_REQUIRES "hsa-rocr, kmod, pciutils, python3, glibc, libgcc, libstdc++")
+else()
+  set(CPACK_RPM_PACKAGE_REQUIRES "hsa-rocr, kmod, pciutils, python3, glibc, (libgcc or libgcc_s1), (libstdc++ or libstdc++6)")
+endif() # End EVAL_RESULT
+
 if(DEFINED CPACK_PACKAGING_INSTALL_PREFIX)
   set ( CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "${CPACK_PACKAGING_INSTALL_PREFIX} ${CPACK_PACKAGING_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" )
 endif()
