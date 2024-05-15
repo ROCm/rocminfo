@@ -10,7 +10,7 @@ subtrees:
 
 - caption: How to
   entries:
-  - file: how to/use-rocm-agent-enumerator.rst
+  - file: how-to/use-rocm-agent-enumerator.rst
     title: Use ROCm agent enumerator 
 
 - caption: About
