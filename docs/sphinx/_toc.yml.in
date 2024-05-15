@@ -7,7 +7,6 @@ subtrees:
   - file: install/install.rst
     title: ROCmInfo installation 
 
-
 - caption: How to
   entries:
   - file: how-to/use-rocm-agent-enumerator.rst
