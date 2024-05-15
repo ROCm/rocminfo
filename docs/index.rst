@@ -2,8 +2,13 @@
   :description: Install ROCmInfo
   :keywords: install, rocminfo, AMD, ROCm
 
+ROCmInfo documentation
+*************************
 
-For more information, see `GitHub. <https://github.com/ROCm/rocminfo>`_
+ROCmInfo is a ROCm application for reporting system information.
+
+
+For more details, see `GitHub. <https://github.com/ROCm/rocminfo>`_
 
 .. grid:: 2
   :gutter: 3
@@ -15,7 +20,7 @@ For more information, see `GitHub. <https://github.com/ROCm/rocminfo>`_
 
   .. grid-item-card:: How to
 
-    * :doc:`Use ROCm agent enumerator <how to/use-rocm-agent-enumerator>`
+    * :doc:`Use ROCm agent enumerator <how-to/use-rocm-agent-enumerator>`
 
 
 To contribute to the documentation, refer to
