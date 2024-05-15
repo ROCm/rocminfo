@@ -1,3 +1,6 @@
+.. meta::
+  :description: Install ROCmInfo
+  :keywords: install, rocminfo, AMD, ROCm
 
 
 Using ROCmInfo
