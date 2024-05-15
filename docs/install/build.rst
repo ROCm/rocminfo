@@ -3,7 +3,7 @@
   :keywords: install, rocminfo, AMD, ROCm
 
 
-Build ROCmInfo
+Building ROCmInfo
 *****************
 
 Use the standard cmake build procedure to build rocminfo. The location of ROCm root (parent directory containing ROCM headers and libraries) must be provided
