@@ -15,7 +15,7 @@ For more details, see `GitHub. <https://github.com/ROCm/rocminfo>`_
 
   .. grid-item-card:: Install
 
-       * :doc:`ROCmInfo installation <./install/install>`
+       * :doc:`ROCmInfo installation <./install/build>`
  
 
   .. grid-item-card:: How to
