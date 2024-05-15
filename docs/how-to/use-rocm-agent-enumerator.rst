@@ -3,7 +3,7 @@
   :keywords: install, rocminfo, AMD, ROCm
 
 
-Using ROCm agent enumertor
+Using ROCm agent enumerator
 --------------------------
 
 You can use ROCmInfo with the following commands:
