@@ -4,7 +4,7 @@
 
 
 Using ROCm agent enumerator
---------------------------
+-----------------------------
 
 You can use ROCmInfo with the following commands:
 
