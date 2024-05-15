@@ -1,10 +1,13 @@
+.. meta::
+  :description: Install ROCmInfo
+  :keywords: install, rocminfo, AMD, ROCm
 
 
 Build ROCmInfo
 *****************
 
 Use the standard cmake build procedure to build rocminfo. The location of ROCm root (parent directory containing ROCM headers and libraries) must be provided
-as a cmake argument using the standard CMAKE_PREFIX_PATH cmake variable.
+as a cmake argument using the standard CMAKE_PREFIX_PATH CMake variable.
 
 After cloning the rocminfo git repo, please make sure to do a git-fetch --tags to get the tags residing on the repo. These tags are used for versioning.
 
