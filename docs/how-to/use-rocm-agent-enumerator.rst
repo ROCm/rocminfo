@@ -6,6 +6,12 @@
 Using ROCm agent enumerator
 -----------------------------
 
+The following products support ROCm Info:
+
+- gfx000
+- gfx941
+- gfx1036
+
 You can use ROCmInfo with the following commands:
 
 .. code-block::
