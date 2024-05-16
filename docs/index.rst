@@ -13,7 +13,7 @@ For more details, see `GitHub. <https://github.com/ROCm/rocminfo>`_
 .. grid:: 2
   :gutter: 3
 
-  .. grid-item-card:: Install
+  .. grid-item-card:: Build
 
        * :doc:`ROCmInfo installation <./install/build>`
  
