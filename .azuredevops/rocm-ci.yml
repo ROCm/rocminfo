@@ -6,7 +6,7 @@ resources:
     name: ROCm/ROCm
   pipelines:
   - pipeline: rocr-runtime_pipeline
-    source: rocr-runtime
+    source: \ROCR-Runtime
     trigger:
       branches:
         include:
@@ -25,7 +25,7 @@ trigger:
     exclude:
     - .github
     - License.txt
-    - README.md'
+    - README.md
 
 pr:
   autoCancel: true
@@ -36,7 +36,7 @@ pr:
     exclude:
     - .github
     - License.txt
-    - README.md'
+    - README.md
   drafts: false
 
 jobs:
