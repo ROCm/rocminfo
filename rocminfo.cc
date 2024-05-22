@@ -248,7 +248,7 @@ pair<string, int> exec(const char* cmd) {
 }
 
 static void DetectWSLEnvironment() {
-  auto process_ret = exec("which wslinfo");
+  auto process_ret = exec("which wslinfo > /dev/null 2>&1");
   if (process_ret.second)
     return;
 
