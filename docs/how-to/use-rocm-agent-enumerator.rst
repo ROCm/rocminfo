@@ -1,6 +1,6 @@
 .. meta::
-  :description: Install ROCmInfo
-  :keywords: install, rocminfo, AMD, ROCm
+  :description: agent, enumerator ROCmInfo
+  :keywords: install, rocminfo, AMD, ROCm, ROCmInfo
 
 
 Using ROCm agent enumerator
