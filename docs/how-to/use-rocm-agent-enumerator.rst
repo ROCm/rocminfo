@@ -6,7 +6,7 @@
 Using ROCm agent enumerator
 -----------------------------
 
-The following products support ROCm Info:
+The following products support ROCmInfo:
 
 - gfx000
 - gfx941
