@@ -6,10 +6,10 @@
 Building ROCmInfo
 *****************
 
-Use the standard cmake build procedure to build rocminfo. The location of ROCm root (parent directory containing ROCM headers and libraries) must be provided
-as a cmake argument using the standard CMAKE_PREFIX_PATH CMake variable.
+Use the standard cmake build procedure to build ROCmInfo. The location of ROCm root (parent directory containing ROCM headers and libraries) must be provided
+as a CMake argument using the standard CMAKE_PREFIX_PATH CMake variable.
 
-After cloning the rocminfo git repo, please make sure to do a git-fetch --tags to get the tags residing on the repo. These tags are used for versioning.
+After cloning the ROCmInfo git repo, you must perform a `git-fetch --tags` to get the tags residing on the repo. These tags are used for versioning.
 
 For example,
 
@@ -46,4 +46,4 @@ ROCmInfo execution
 
 4. lspci : enumerate PCI bus and locate supported devices from a hard-coded lookup table.
 
-5. rocminfo : a tool shipped with this script to enumerate GPU agents available on a working ROCm stack.
+5. ROCmInfo : a tool shipped with this script to enumerate GPU agents available on a working ROCm stack.
