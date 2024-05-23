@@ -6,6 +6,8 @@
 Using ROCm agent enumerator
 -----------------------------
 
+While ROCmInfo gives information about the HSA system attributes and agents, "rocm_agent_enumerator" prints the list of available AMD GCN ISA or architecture names. With the option '-name', it prints out available architectures names obtained from ROCmInfo.
+
 The following products support ROCmInfo:
 
 - gfx000
