@@ -29,7 +29,7 @@ For example,
     
     cd ..
 
-Upon a successful build, the binary, rocminfo, and the python script, rocm_agent_enumerator, will be in the `build` folder.
+Upon a successful build, the binary, ROCmInfo, and the Python script, rocm_agent_enumerator, will be in the `build` folder.
 
 ROCmInfo execution
 -------------------
