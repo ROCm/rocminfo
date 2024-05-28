@@ -20,8 +20,9 @@ You can access ROCmInfo code at `GitHub. <https://github.com/ROCm/rocminfo>`_
 
   .. grid-item-card:: How to
 
-    * :doc:`Use ROCm agent enumerator <how-to/use-rocm-agent-enumerator>`
     * :doc:`Use ROCmInfo <how-to/use-rocminfo>`
+    * :doc:`Use ROCm agent enumerator <how-to/use-rocm-agent-enumerator>`
+    
 
 
 To contribute to the documentation, refer to
