@@ -90,10 +90,13 @@
 // calls, and is later used for reference when displaying the information.
 struct system_info_t {
     uint16_t major, minor;
+    uint16_t ext_major, ext_minor;
     uint64_t timestamp_frequency = 0;
     uint64_t max_wait = 0;
     hsa_endianness_t endianness;
     hsa_machine_model_t machine_model;
+    bool mwaitx_enabled;
+    bool dmabuf_support;
 };
 
 // This structure holds agent information acquired through hsa info related
@@ -135,6 +138,10 @@ struct agent_info_t {
   uint16_t workgroup_max_dim[3];
   uint16_t bdf_id;
   bool fast_f16;
+  bool coherent_host_access;
+  uint32_t pkt_processor_ucode_ver;
+  uint32_t sdma_ucode_ver;
+  hsa_amd_iommu_version_t iommu_support;
 };
 
 // This structure holds memory pool information acquired through hsa info
@@ -145,6 +152,7 @@ typedef struct {
     size_t pool_size;
     bool alloc_allowed;
     size_t alloc_granule;
+    size_t alloc_rec_granule;
     size_t pool_alloc_alignment;
     bool pl_access;
     uint32_t global_flag;
@@ -255,6 +263,14 @@ static hsa_status_t AcquireSystemInfo(system_info_t *sys_info) {
   err = hsa_system_get_info(HSA_SYSTEM_INFO_VERSION_MINOR, &sys_info->minor);
   RET_IF_HSA_ERR(err);
 
+  // Get HSA Ext Interface version
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_EXT_VERSION_MAJOR,
+                                                     &sys_info->ext_major);
+  RET_IF_HSA_ERR(err);
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_EXT_VERSION_MINOR,
+                                                     &sys_info->ext_minor);
+  RET_IF_HSA_ERR(err);
+
   // Get timestamp frequency
   err = hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY,
                                               &sys_info->timestamp_frequency);
@@ -273,12 +289,23 @@ static hsa_status_t AcquireSystemInfo(system_info_t *sys_info) {
   err = hsa_system_get_info(HSA_SYSTEM_INFO_MACHINE_MODEL,
                                                      &sys_info->machine_model);
   RET_IF_HSA_ERR(err);
+
+  // Get mwaitx mode
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_MWAITX_ENABLED,
+                                                     &sys_info->mwaitx_enabled);
+  // Get DMABuf support
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_DMABUF_SUPPORTED,
+                                                     &sys_info->dmabuf_support);
+  RET_IF_HSA_ERR(err);
+
   return err;
 }
 
 static void DisplaySystemInfo(system_info_t const *sys_info) {
   printLabel("Runtime Version:");
   printf("%d.%d\n", sys_info->major, sys_info->minor);
+  printLabel("Runtime Ext Version:");
+  printf("%d.%d\n", sys_info->ext_major, sys_info->ext_minor);
   printLabel("System Timestamp Freq.:");
   printf("%fMHz\n", sys_info->timestamp_frequency / 1e6);
   printLabel("Sig. Max Wait Duration:");
@@ -298,6 +325,13 @@ static void DisplaySystemInfo(system_info_t const *sys_info) {
   } else if (HSA_ENDIANNESS_BIG == sys_info->endianness) {
     printValueStr("BIG");
   }
+
+  printLabel("Mwaitx:");
+  printf("%s\n", sys_info->mwaitx_enabled ? "ENABLED" : "DISABLED");
+
+  printLabel("DMAbuf Support:");
+  printf("%s\n", sys_info->dmabuf_support ? "YES" : "NO");
+
   printf("\n");
 }
 
@@ -451,6 +485,12 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
                                                       &agent_i->compute_unit);
   RET_IF_HSA_ERR(err);
 
+  // Get coherent Host access
+  err = hsa_agent_get_info(agent,
+                           (hsa_agent_info_t) HSA_AMD_AGENT_INFO_SVM_DIRECT_HOST_ACCESS,
+                           &agent_i->coherent_host_access);
+  RET_IF_HSA_ERR(err);
+
   // Check if the agent is kernel agent
   if (agent_i->agent_feature & HSA_AGENT_FEATURE_KERNEL_DISPATCH) {
     // Get flaf of fast_f16 operation
@@ -491,6 +531,19 @@ AcquireAgentInfo(hsa_agent_t agent, agent_info_t *agent_i) {
     err = hsa_agent_get_info(agent,
                     (hsa_agent_info_t)HSA_AMD_AGENT_INFO_MAX_WAVES_PER_CU,
                                                   &agent_i->max_waves_per_cu);
+    RET_IF_HSA_ERR(err);
+
+    err = hsa_agent_get_info(agent,
+                    (hsa_agent_info_t)HSA_AMD_AGENT_INFO_UCODE_VERSION,
+                                                  &agent_i->pkt_processor_ucode_ver);
+    RET_IF_HSA_ERR(err);
+    err = hsa_agent_get_info(agent,
+                    (hsa_agent_info_t)HSA_AMD_AGENT_INFO_SDMA_UCODE_VERSION,
+                                                  &agent_i->sdma_ucode_ver);
+    RET_IF_HSA_ERR(err);
+    err = hsa_agent_get_info(agent,
+                    (hsa_agent_info_t)HSA_AMD_AGENT_INFO_IOMMU_SUPPORT,
+                                                  &agent_i->iommu_support);
     RET_IF_HSA_ERR(err);
   }
   return err;
@@ -586,6 +639,9 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
   printLabelInt("Shader Arrs. per Eng.:", agent_i->shader_arrs_per_sh_eng, 1);
   printLabelInt("WatchPts on Addr. Ranges:", agent_i->max_addr_watch_pts, 1);
 
+  if (agent_i->device_type == HSA_DEVICE_TYPE_GPU)
+    printLabelStr("Coherent Host Access:", agent_i->coherent_host_access ? "TRUE":"FALSE", 1);
+
   printLabel("Features:", false, 1);
   if (agent_i->agent_feature & HSA_AGENT_FEATURE_KERNEL_DISPATCH) {
     printf("%s", "KERNEL_DISPATCH ");
@@ -627,6 +683,11 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
     printLabelStr("z", int_to_string(agent_i->grid_max_dim.z), 2);
 
     printLabelInt("Max fbarriers/Workgrp:", agent_i->fbarrier_max_size, 1);
+
+    printLabelInt("Packet Processor uCode::", agent_i->pkt_processor_ucode_ver, 1);
+    printLabelInt("SDMA engine uCode::", agent_i->sdma_ucode_ver, 1);
+    printLabelStr("IOMMU Support::",
+                    agent_i->iommu_support == HSA_IOMMU_SUPPORT_V2 ? "V2" : "None", 1);
   }
 }
 
@@ -658,6 +719,11 @@ static hsa_status_t AcquirePoolInfo(hsa_amd_memory_pool_t pool,
   RET_IF_HSA_ERR(err);
 
   err = hsa_amd_memory_pool_get_info(pool,
+                                     HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_REC_GRANULE,
+                                     &pool_i->alloc_rec_granule);
+  RET_IF_HSA_ERR(err);
+
+  err = hsa_amd_memory_pool_get_info(pool,
                            HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_ALIGNMENT,
                                                &pool_i->pool_alloc_alignment);
   RET_IF_HSA_ERR(err);
@@ -685,6 +751,11 @@ static void MakeGlobalFlagsString(uint32_t global_flag, std::string* out_str) {
 
   if (HSA_AMD_MEMORY_POOL_GLOBAL_FLAG_COARSE_GRAINED & global_flag) {
     flags.push_back("COARSE GRAINED");
+  }
+
+  if (HSA_AMD_MEMORY_POOL_GLOBAL_FLAG_EXTENDED_SCOPE_FINE_GRAINED & global_flag)
+  {
+    flags.push_back("EXTENDED FINE GRAINED");
   }
 
   if (flags.size() > 0) {
@@ -736,6 +807,9 @@ static void DisplayPoolInfo(pool_info_t *pool_i, uint32_t indent) {
                                                                       indent);
   std::string gr_str = std::to_string(pool_i->alloc_granule/1024)+"KB";
   printLabelStr("Alloc Granule:", gr_str.c_str(), indent);
+
+  std::string rgr_str = std::to_string(pool_i->alloc_rec_granule / 1024) + "KB";
+  printLabelStr("Alloc Recommended Granule:", rgr_str.c_str(), indent);
 
   std::string al_str = std::to_string(pool_i->pool_alloc_alignment/1024)+"KB";
   printLabelStr("Alloc Alignment:", al_str.c_str(), indent);
@@ -1056,7 +1130,17 @@ int CheckInitialState(void) {
       }
     }
     if (is_live){
-      printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
+      std::ifstream amdgpu_version("/sys/module/amdgpu/version");
+      if (amdgpu_version){
+        std::stringstream buffer;
+        buffer << amdgpu_version.rdbuf();
+        std::string vers;
+        std::getline(buffer, vers);
+        amdgpu_version.close();
+        printf("%sROCk module version %s is loaded%s\n", COL_WHT, vers.c_str(), COL_RESET);
+      } else {
+        printf("%sROCk module is loaded%s\n", COL_WHT, COL_RESET);
+      }
     } else {
       printf("%sROCk module is NOT live, possibly no GPU devices%s\n",
                                                           COL_RED, COL_RESET);

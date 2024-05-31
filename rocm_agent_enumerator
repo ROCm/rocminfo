@@ -92,7 +92,7 @@ def getGCNISA(line, match_from_beginning = False):
    return result.group(0)
  return None
 
-@staticVars(search_name=re.compile("gfx[0-9a-fA-F]+:[-+:\w]+"))
+@staticVars(search_name=re.compile(r"gfx[0-9a-fA-F]+(:[-+:\w]+)?"))
 def getGCNArchName(line):
  result = getGCNArchName.search_name.search(line)
 
@@ -149,9 +149,9 @@ def readFromROCMINFO(search_arch_name = False):
 
   # search AMDGCN gfx ISA
   if search_arch_name is True:
-    line_search_term = re.compile("\A\s+Name:\s+(amdgcn-amd-amdhsa--gfx\d+)")
+    line_search_term = re.compile(r"\A\s+Name:\s+(amdgcn-amd-amdhsa--gfx\d+)")
   else:
-    line_search_term = re.compile("\A\s+Name:\s+(gfx\d+)")
+    line_search_term = re.compile(r"\A\s+Name:\s+(gfx\d+)")
   for line in rocminfo_output:
     if line_search_term.match(line) is not None:
       if search_arch_name is True:
@@ -172,7 +172,7 @@ def readFromLSPCI():
   except:
     lspci_output = []
 
-  target_search_term = re.compile("1002:\w+")
+  target_search_term = re.compile(r"1002:\w+")
   for line in lspci_output:
     search_result = target_search_term.search(line)
     if search_result is not None:
@@ -209,9 +209,28 @@ def readFromKFD():
               if search_result is not None:
                 device_id = int(search_result.group(0).split(' ')[1], 10)
                 if device_id != 0:
-                  major_ver = int((device_id / 10000) % 100)
-                  minor_ver = int((device_id / 100) % 100)
-                  stepping_ver = int(device_id % 100)
+                  gfx_override = os.environ.get("HSA_OVERRIDE_GFX_VERSION")
+                  if gfx_override is not None:
+                    try:
+                        override_tokens = gfx_override.split('.')
+                        major_ver=int(override_tokens[0])
+                        minor_ver=int(override_tokens[1])
+                        stepping_ver=int(override_tokens[2])
+                        if major_ver > 63 or minor_ver > 255 or stepping_ver > 255:
+                            print('Invalid HSA_OVERRIDE_GFX_VERSION value')
+                            major_ver = 0
+                            minor_ver = 0
+                            stepping_ver = 0
+                    except Exception as e:
+                        print('Invalid HSA_OVERRIDE_GFX_VERSION format expected \"1.2.3\"')
+                        major_ver = 0
+                        minor_ver = 0
+                        stepping_ver = 0
+                  else:
+                    major_ver = int((device_id / 10000) % 100)
+                    minor_ver = int((device_id / 100) % 100)
+                    stepping_ver = int(device_id % 100)
+
                   target_list.append("gfx" + format(major_ver, 'd') + format(minor_ver, 'x') + format(stepping_ver, 'x'))
               line = f.readline()
 
