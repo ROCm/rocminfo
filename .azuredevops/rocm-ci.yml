@@ -20,7 +20,8 @@ trigger:
   batch: true
   branches:
     include:
-    - master
+    - amd-staging
+    - amd-master
   paths:
     exclude:
     - .github
@@ -31,7 +32,8 @@ pr:
   autoCancel: true
   branches:
     include:
-    - master
+    - amd-staging
+    - amd-master
   paths:
     exclude:
     - .github
