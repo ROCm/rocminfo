@@ -1063,9 +1063,14 @@ int CheckInitialState(void) {
       return -1;
     }
   } else {
-    printf("%sROCk module is NOT loaded, possibly no GPU devices%s\n",
+    int module_dir;
+    module_dir = open("/sys/module/amdgpu", O_DIRECTORY);
+    if (module_dir < 0) {
+      printf("%sROCk module is NOT loaded, possibly no GPU devices%s\n",
                                                           COL_RED, COL_RESET);
-    return -1;
+      return -1;
+	}
+	close(module_dir);
   }
 
   // Check if user belongs to the group for /dev/kfd (e.g. "video" or
