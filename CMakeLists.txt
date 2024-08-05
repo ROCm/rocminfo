@@ -247,6 +247,9 @@ endif()
 if ( ROCM_DEP_ROCMCORE )
   string ( APPEND CPACK_RPM_PACKAGE_REQUIRES " rocm-core" )
 endif()
+# Cpack converts !/usr/bin/env python3 to /usr/libexec/platform-python in RHEL8.
+# prevent the BRP(buildroot policy) script from checking and modifying interpreter directives
+set(CPACK_RPM_SPEC_MORE_DEFINE "%undefine __brp_mangle_shebangs")
 
 #Set rpm distro
 if(CPACK_RPM_PACKAGE_RELEASE)
