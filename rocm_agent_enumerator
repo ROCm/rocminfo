@@ -271,10 +271,6 @@ def main():
     if len(target_list) == 0:
       target_list = readFromROCMINFO()
 
-    # workaround to cope with existing rocm_agent_enumerator behavior where gfx000
-    # would always be returned
-    print("gfx000")
-
   for gfx in target_list:
     print(gfx)
 
