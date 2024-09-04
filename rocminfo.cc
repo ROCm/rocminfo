@@ -101,7 +101,9 @@ struct system_info_t {
     hsa_endianness_t endianness;
     hsa_machine_model_t machine_model;
     bool mwaitx_enabled;
+    bool xnack_enabled;
     bool dmabuf_support;
+    bool vmm_support;
 };
 
 // This structure holds agent information acquired through hsa info related
@@ -331,9 +333,20 @@ static hsa_status_t AcquireSystemInfo(system_info_t *sys_info) {
   err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_MWAITX_ENABLED,
                                                      &sys_info->mwaitx_enabled);
   RET_IF_HSA_ERR(err);
+
   // Get DMABuf support
   err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_DMABUF_SUPPORTED,
                                                      &sys_info->dmabuf_support);
+  RET_IF_HSA_ERR(err);
+
+  // Get Xnack Enabled
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_XNACK_ENABLED,
+                                                     &sys_info->xnack_enabled);
+  RET_IF_HSA_ERR(err);
+
+  // Get VMM supported
+  err = hsa_system_get_info(HSA_AMD_SYSTEM_INFO_VIRTUAL_MEM_API_SUPPORTED,
+                                                     &sys_info->vmm_support);
   RET_IF_HSA_ERR(err);
 
   return err;
@@ -367,8 +380,14 @@ static void DisplaySystemInfo(system_info_t const *sys_info) {
   printLabel("Mwaitx:");
   printf("%s\n", sys_info->mwaitx_enabled ? "ENABLED" : "DISABLED");
 
+  printLabel("XNACK enabled:");
+  printf("%s\n", sys_info->xnack_enabled ? "YES" : "NO");
+
   printLabel("DMAbuf Support:");
   printf("%s\n", sys_info->dmabuf_support ? "YES" : "NO");
+
+  printLabel("VMM Support:");
+  printf("%s\n", sys_info->vmm_support ? "YES" : "NO");
 
   printf("\n");
 }
