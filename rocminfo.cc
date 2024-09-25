@@ -1316,6 +1316,13 @@ int CheckInitialState(void) {
 int main(int argc, char* argv[]) {
   hsa_status_t err;
 
+    vector<string> options = {"help", "version", "verbose"};
+    vector<string> descriptions = {"Display this help message",
+                                  "Print program version information",
+                                  "Enable verbose output"};
+
+    bool show_help = false;
+    
   DetectWSLEnvironment();
 
   if (!wsl_env && CheckInitialState()) {
