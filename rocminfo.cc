@@ -1306,10 +1306,10 @@ int CheckInitialState(void) {
   delete []groups;
   return -1;
 }
-
+#include<iostream>
 void print_help(const vector<string>& options, const vector<string>& descriptions) {
-    cout << "Usage: <program_name> [options]\n";
-    cout << "Available options:\n";
+	std::cout << "Usage: <program_name> [options]\n";
+	std::cout << "Available options:\n";
 
     for (size_t i = 0; i < options.size(); ++i) {
         cout << "  -" << options[i] << ": " << descriptions[i] << endl;
@@ -1376,6 +1376,7 @@ int main(int argc, char* argv[]) {
         std::getline(buffer, vers);
         amdgpu_version.close();
         printf("%sROCk module version %s is loaded%s\n", COL_WHT, vers.c_str(), COL_RESET);
+      }
     }
     else if (option == "-verbose" || option == "--verbose") {
     }
