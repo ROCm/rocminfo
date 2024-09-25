@@ -1185,6 +1185,70 @@ AcquireAndDisplayAgentInfo(hsa_agent_t agent, void* data) {
   return HSA_STATUS_SUCCESS;
 }
 
+static hsa_status_t
+showCPUInfo(hsa_agent_t agent, void* data) {
+  int pool_number = 0;
+  int isa_number = 0;
+
+  hsa_status_t err;
+  agent_info_t agent_i;
+
+  int *agent_number = reinterpret_cast<int*>(data);
+  (*agent_number)++;
+
+  err = AcquireAgentInfo(agent, &agent_i);
+  RET_IF_HSA_ERR(err);
+if(agent_i.device_type == HSA_DEVICE_TYPE_CPU){
+    DisplayAgentInfo(&agent_i);
+
+    printLabel("Pool Info:", true, 1);
+    err = hsa_amd_agent_iterate_memory_pools(agent, get_pool_info, &pool_number);
+    RET_IF_HSA_ERR(err);
+
+    printLabel("ISA Info:", true, 1);
+    err = hsa_agent_iterate_isas(agent, get_isa_info, &isa_number);
+    if (err == HSA_STATUS_ERROR_INVALID_AGENT) {
+      printLabel("N/A", true, 2);
+      return HSA_STATUS_SUCCESS;
+    }
+    RET_IF_HSA_ERR(err);
+}
+
+  return HSA_STATUS_SUCCESS;
+}
+
+static hsa_status_t
+showGPUInfo(hsa_agent_t agent, void* data) {
+  int pool_number = 0;
+  int isa_number = 0;
+
+  hsa_status_t err;
+  agent_info_t agent_i;
+
+  int *agent_number = reinterpret_cast<int*>(data);
+  (*agent_number)++;
+
+  err = AcquireAgentInfo(agent, &agent_i);
+  RET_IF_HSA_ERR(err);
+
+if(agent_i.device_type == HSA_DEVICE_TYPE_GPU){
+    DisplayAgentInfo(&agent_i);
+
+    printLabel("Pool Info:", true, 1);
+    err = hsa_amd_agent_iterate_memory_pools(agent, get_pool_info, &pool_number);
+    RET_IF_HSA_ERR(err);
+
+    printLabel("ISA Info:", true, 1);
+    err = hsa_agent_iterate_isas(agent, get_isa_info, &isa_number);
+    if (err == HSA_STATUS_ERROR_INVALID_AGENT) {
+      printLabel("N/A", true, 2);
+      return HSA_STATUS_SUCCESS;
+    }
+    RET_IF_HSA_ERR(err);
+}
+  return HSA_STATUS_SUCCESS;
+}
+
 int CheckInitialState(void) {
   // Check kernel module for ROCk is loaded
 
@@ -1340,6 +1404,7 @@ int main(int argc, char* argv[]) {
 
   // Acquire and display system information
   system_info_t sys_info;
+  uint32_t agent_ind = 0;
 
   // This function will call HSA get_info functions to gather information
   // about the system.
@@ -1381,8 +1446,10 @@ int main(int argc, char* argv[]) {
     else if (option == "-verbose" || option == "--verbose") {
     }
     else if (option == "-CPU" || option == "--CPU") {
+        err = hsa_iterate_agents(showCPUInfo, &agent_ind);
     } 
     else if (option == "-GPU" || option == "--GPU") {
+      err = hsa_iterate_agents(showGPUInfo, &agent_ind);
     }
     else if (option == "-Sys" || option == "--Sys") {
         DisplaySystemInfo(&sys_info);
@@ -1395,7 +1462,7 @@ int main(int argc, char* argv[]) {
       printLabel("HSA Agents", true);
       printLabel("==========", true);
 
-      uint32_t agent_ind = 0;
+
       err = hsa_iterate_agents(AcquireAndDisplayAgentInfo, &agent_ind);
       RET_IF_HSA_ERR(err);
 
