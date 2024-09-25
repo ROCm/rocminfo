@@ -1315,7 +1315,8 @@ int CheckInitialState(void) {
 // accumulated data in a formatted way.
 int main(int argc, char* argv[]) {
   hsa_status_t err;
-
+  //add code for help message
+  
   DetectWSLEnvironment();
 
   if (!wsl_env && CheckInitialState()) {
