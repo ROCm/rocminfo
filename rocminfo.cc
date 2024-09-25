@@ -1315,6 +1315,8 @@ int CheckInitialState(void) {
 // accumulated data in a formatted way.
 int main(int argc, char* argv[]) {
   hsa_status_t err;
+  //add code for help message
+  
 
     vector<string> options = {"help", "version", "verbose"};
     vector<string> descriptions = {"Display this help message",
