@@ -1307,6 +1307,15 @@ int CheckInitialState(void) {
   return -1;
 }
 
+void print_help(const vector<string>& options, const vector<string>& descriptions) {
+    cout << "Usage: <program_name> [options]\n";
+    cout << "Available options:\n";
+
+    for (size_t i = 0; i < options.size(); ++i) {
+        cout << "  -" << options[i] << ": " << descriptions[i] << endl;
+    }
+}
+
 // Print out all static information known to HSA about the target system.
 // Throughout this program, the Acquire-type functions make HSA calls to
 // interate through HSA objects and then perform HSA get_info calls to
@@ -1315,16 +1324,12 @@ int CheckInitialState(void) {
 // accumulated data in a formatted way.
 int main(int argc, char* argv[]) {
   hsa_status_t err;
-  //add code for help message
-  
+  string option;
 
-    vector<string> options = {"help", "version", "verbose"};
-    vector<string> descriptions = {"Display this help message",
-                                  "Print program version information",
-                                  "Enable verbose output"};
+    for (int i = 1; i < argc; ++i) {
+        option = argv[i];
+    }
 
-    bool show_help = false;
-    
   DetectWSLEnvironment();
 
   if (!wsl_env && CheckInitialState()) {
@@ -1341,21 +1346,61 @@ int main(int argc, char* argv[]) {
   err = AcquireSystemInfo(&sys_info);
   RET_IF_HSA_ERR(err);
 
+  //add code for help message
+    vector<string> options = {"help", "version", "verbose",
+                              "CPU", "GPU", "Sys"
+                                };
+    vector<string> descriptions = {"Display this help message",
+                                  "Print program version information",
+                                  "Enable verbose output",
+                                  "Display CPU details",
+                                  "Display GPU details",
+                                  "Display System details"
+                                  };
+    
+
   printLabel("=====================", true);
   printLabel("HSA System Attributes", true);
   printLabel("=====================", true);
-  DisplaySystemInfo(&sys_info);
 
-  // Iterate through every agent and get and display their info
-  printLabel("==========", true);
-  printLabel("HSA Agents", true);
-  printLabel("==========", true);
-  uint32_t agent_ind = 0;
-  err = hsa_iterate_agents(AcquireAndDisplayAgentInfo, &agent_ind);
-  RET_IF_HSA_ERR(err);
 
-  printLabel("*** Done ***", true);
+    if (option == "-h" || option == "-help" || option == "--help") {
+         print_help(options, descriptions);
+    }
+    else if (option == "-v" || option == "-version" || option == "--version") {
+      std::ifstream amdgpu_version("/sys/module/amdgpu/version");
+      if (amdgpu_version){
+        std::stringstream buffer;
+        buffer << amdgpu_version.rdbuf();
+        std::string vers;
+        std::getline(buffer, vers);
+        amdgpu_version.close();
+        printf("%sROCk module version %s is loaded%s\n", COL_WHT, vers.c_str(), COL_RESET);
+    }
+    else if (option == "-verbose" || option == "--verbose") {
+    }
+    else if (option == "-CPU" || option == "--CPU") {
+    } 
+    else if (option == "-GPU" || option == "--GPU") {
+    }
+    else if (option == "-Sys" || option == "--Sys") {
+        DisplaySystemInfo(&sys_info);
+    }
+    else {
+      DisplaySystemInfo(&sys_info);
 
+      // Iterate through every agent and get and display their info
+      printLabel("==========", true);
+      printLabel("HSA Agents", true);
+      printLabel("==========", true);
+
+      uint32_t agent_ind = 0;
+      err = hsa_iterate_agents(AcquireAndDisplayAgentInfo, &agent_ind);
+      RET_IF_HSA_ERR(err);
+
+      printLabel("*** Done ***", true);
+    }
+    
   err = hsa_shut_down();
   RET_IF_HSA_ERR(err);
   return 0;
