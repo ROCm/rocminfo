@@ -1429,10 +1429,10 @@ int main(int argc, char* argv[]) {
   printLabel("=====================", true);
 
 
-    if (option == "-h" || option == "-help" || option == "--help") {
+    if (option == "-h" || option == "--help") {
          print_help(options, descriptions);
     }
-    else if (option == "-v" || option == "-version" || option == "--version") {
+    else if (option == "-ver" || option == "--version") {
       std::ifstream amdgpu_version("/sys/module/amdgpu/version");
       if (amdgpu_version){
         std::stringstream buffer;
@@ -1443,15 +1443,15 @@ int main(int argc, char* argv[]) {
         printf("%sROCk module version %s is loaded%s\n", COL_WHT, vers.c_str(), COL_RESET);
       }
     }
-    else if (option == "-verbose" || option == "--verbose") {
+    else if (option == "-v" || option == "--verbose") {
     }
-    else if (option == "-CPU" || option == "--CPU") {
+    else if (option == "-c" || option == "--CPU") {
         err = hsa_iterate_agents(showCPUInfo, &agent_ind);
     } 
-    else if (option == "-GPU" || option == "--GPU") {
+    else if (option == "-g" || option == "--GPU") {
       err = hsa_iterate_agents(showGPUInfo, &agent_ind);
     }
-    else if (option == "-Sys" || option == "--Sys") {
+    else if (option == "-s" || option == "--Sys") {
         DisplaySystemInfo(&sys_info);
     }
     else {
