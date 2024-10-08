@@ -1193,9 +1193,6 @@ showCPUInfo(hsa_agent_t agent, void* data) {
   hsa_status_t err;
   agent_info_t agent_i;
 
-  int *agent_number = reinterpret_cast<int*>(data);
-  (*agent_number)++;
-
   err = AcquireAgentInfo(agent, &agent_i);
   RET_IF_HSA_ERR(err);
 if(agent_i.device_type == HSA_DEVICE_TYPE_CPU){
@@ -1224,9 +1221,6 @@ showGPUInfo(hsa_agent_t agent, void* data) {
 
   hsa_status_t err;
   agent_info_t agent_i;
-
-  int *agent_number = reinterpret_cast<int*>(data);
-  (*agent_number)++;
 
   err = AcquireAgentInfo(agent, &agent_i);
   RET_IF_HSA_ERR(err);
@@ -1371,12 +1365,12 @@ int CheckInitialState(void) {
   return -1;
 }
 #include<iostream>
-void print_help(const vector<string>& options, const vector<string>& descriptions) {
-	std::cout << "Usage: <program_name> [options]\n";
+void print_help(const vector<string>& options, const vector<string>& descriptions, const vector<string>& shortForm) {
+	std::cout << "Usage: <rocminfo> [options]\n";
 	std::cout << "Available options:\n";
 
     for (size_t i = 0; i < options.size(); ++i) {
-        cout << "  -" << options[i] << ": " << descriptions[i] << endl;
+        cout << "-" << shortForm[i] <<"  --" << options[i] << ": " << descriptions[i] << endl;
     }
 }
 
@@ -1415,8 +1409,9 @@ int main(int argc, char* argv[]) {
     vector<string> options = {"help", "version", "verbose",
                               "CPU", "GPU", "Sys"
                                 };
+    vector<string> shortForm = {"h","ver","v","c","g","s"};
     vector<string> descriptions = {"Display this help message",
-                                  "Print program version information",
+                                  "Print rocm version information",
                                   "Enable verbose output",
                                   "Display CPU details",
                                   "Display GPU details",
@@ -1430,7 +1425,7 @@ int main(int argc, char* argv[]) {
 
 
     if (option == "-h" || option == "--help") {
-         print_help(options, descriptions);
+         print_help(options, descriptions, shortForm);
     }
     else if (option == "-ver" || option == "--version") {
       std::ifstream amdgpu_version("/sys/module/amdgpu/version");
