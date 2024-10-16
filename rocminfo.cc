@@ -1365,14 +1365,22 @@ int CheckInitialState(void) {
   return -1;
 }
 #include<iostream>
-void print_help(const vector<string>& options, const vector<string>& descriptions, const vector<string>& shortForm) {
+
+struct optionContainer{
+	std::vector<string> options;
+	std::vector<string> shortForm;
+	std::vector<string> descriptions;
+};
+
+void print_help(optionContainer optCont) {
 	std::cout << "Usage: <rocminfo> [options]\n";
 	std::cout << "Available options:\n";
 
-    for (size_t i = 0; i < options.size(); ++i) {
-        cout << "-" << shortForm[i] <<"  --" << options[i] << ": " << descriptions[i] << endl;
+    for (size_t i = 0; i < optCont.options.size(); ++i) {
+        cout << "-" << optCont.shortForm[i] <<"  --" << optCont.options[i] << ": " << optCont.descriptions[i] << endl;
     }
 }
+
 
 // Print out all static information known to HSA about the target system.
 // Throughout this program, the Acquire-type functions make HSA calls to
@@ -1382,9 +1390,10 @@ void print_help(const vector<string>& options, const vector<string>& description
 // accumulated data in a formatted way.
 int main(int argc, char* argv[]) {
   hsa_status_t err;
+  optionContainer optionCon;
   string option;
 
-    for (int i = 1; i < argc; ++i) {
+  for (int i = 1; i < argc; ++i) {
         option = argv[i];
     }
 
@@ -1406,11 +1415,11 @@ int main(int argc, char* argv[]) {
   RET_IF_HSA_ERR(err);
 
   //add code for help message
-    vector<string> options = {"help", "version", "verbose",
+    optionCon.options = {"help", "version", "verbose",
                               "CPU", "GPU", "Sys"
                                 };
-    vector<string> shortForm = {"h","ver","v","c","g","s"};
-    vector<string> descriptions = {"Display this help message",
+    optionCon.shortForm = {"h","ver","v","c","g","s"};
+    optionCon. descriptions = {"Display this help message",
                                   "Print rocm version information",
                                   "Enable verbose output",
                                   "Display CPU details",
@@ -1425,7 +1434,7 @@ int main(int argc, char* argv[]) {
 
 
     if (option == "-h" || option == "--help") {
-         print_help(options, descriptions, shortForm);
+         print_help(optionCon);
     }
     else if (option == "-ver" || option == "--version") {
       std::ifstream amdgpu_version("/sys/module/amdgpu/version");
