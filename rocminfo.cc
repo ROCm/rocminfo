@@ -56,13 +56,8 @@
 #include <string>
 #include <sstream>
 
-#include <memory>
-#include <array>
-
 #include "hsa/hsa.h"
 #include "hsa/hsa_ext_amd.h"
-
-using namespace std;
 
 #define COL_BLU  "\x1B[34m"
 #define COL_KCYN  "\x1B[36m"
@@ -233,31 +228,12 @@ std::string int_to_string(uint32_t i,
   return sd.str();
 }
 
-pair<string, int> exec(const char* cmd) {
-  array<char, 128> buffer;
-  string result;
-  int return_code = -1;
-  auto pclose_wrapper = [&return_code](FILE* cmd){ return_code = pclose(cmd); };
-  { // scope is important, have to make sure the ptr goes out of scope first
-    const unique_ptr<FILE, decltype(pclose_wrapper)> pipe(popen(cmd, "r"), pclose_wrapper);
-    if (pipe) {
-      while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-      }
-    }
-  }
-  return make_pair(result, return_code);
-}
-
 static void DetectWSLEnvironment() {
-  auto process_ret = exec("which wslinfo > /dev/null 2>&1");
-  if (process_ret.second)
-    return;
-
-  process_ret = exec("wslinfo --msal-proxy-path");
-  if (process_ret.second == 0 &&
-      strcasestr(process_ret.first.c_str(), "msal.wsl.proxy.exe") != nullptr) {
+  const char *filePath = "/dev/dxg";
+  FILE *file = fopen(filePath, "r");
+  if (file) {
     printf("WSL environment detected.\n");
+    fclose(file);
     wsl_env = true;
   }
 }
