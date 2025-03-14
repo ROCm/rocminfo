@@ -55,9 +55,7 @@ endif()
 # Default to ON
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 ## Set default module path if not already set
-if(NOT DEFINED CMAKE_MODULE_PATH)
-    set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
-endif()
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 ## Include common cmake modules
 include(utils)
 
