@@ -192,6 +192,7 @@ static const uint32_t kValueFieldSize = 35;
 static const uint32_t kIndentSize = 2;
 
 static bool wsl_env = false;
+static bool dtif_env = false;
 
 enum rocmi_int_format {
   ROCMI_INT_FORMAT_DEC = 1,
@@ -235,6 +236,17 @@ static void DetectWSLEnvironment() {
     printf("WSL environment detected.\n");
     fclose(file);
     wsl_env = true;
+  }
+}
+
+static void DetectDTIFEnvironment() {
+  char *var = getenv("HSA_ENABLE_DTIF");
+  if (var == NULL)
+    return;
+
+  if (0 == strncmp(var, "1", 1)) {
+    printf("HSA-DTIF environment detected.\n");
+    dtif_env = true;
   }
 }
 
@@ -667,10 +679,10 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
   }
 
   printLabelStr("Chip ID:", int_to_string(agent_i->chip_id), 1);
-  if (!wsl_env)
+  if (!(wsl_env || dtif_env))
     printLabelStr("ASIC Revision:", int_to_string(agent_i->asic_revision), 1);
   printLabelStr("Cacheline Size:", int_to_string(agent_i->cacheline_size), 1);
-  if (!wsl_env || HSA_DEVICE_TYPE_GPU == agent_i->device_type)
+  if (!(wsl_env || dtif_env) || HSA_DEVICE_TYPE_GPU == agent_i->device_type)
     printLabelInt("Max Clock Freq. (MHz):", agent_i->max_clock_freq, 1);
   printLabelInt("BDFID:", agent_i->bdf_id, 1);
   printLabelInt("Internal Node ID:", agent_i->internal_node_id, 1);
@@ -678,7 +690,7 @@ static void DisplayAgentInfo(agent_info_t *agent_i) {
   printLabelInt("SIMDs per CU:", agent_i->simds_per_cu, 1);
   printLabelInt("Shader Engines:", agent_i->shader_engs, 1);
   printLabelInt("Shader Arrs. per Eng.:", agent_i->shader_arrs_per_sh_eng, 1);
-  if (!wsl_env)
+  if (!(wsl_env || dtif_env))
     printLabelInt("WatchPts on Addr. Ranges:", agent_i->max_addr_watch_pts, 1);
 
   if (agent_i->device_type == HSA_DEVICE_TYPE_GPU)
@@ -1296,8 +1308,9 @@ int main(int argc, char* argv[]) {
   hsa_status_t err;
 
   DetectWSLEnvironment();
+  DetectDTIFEnvironment();
 
-  if (!wsl_env && CheckInitialState()) {
+  if (!(wsl_env || dtif_env) && CheckInitialState()) {
     return 1;
   }
   err = hsa_init();
